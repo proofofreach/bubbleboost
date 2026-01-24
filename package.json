@@ -1,0 +1,38 @@
+{
+  "name": "bubbleboost",
+  "displayName": "BubbleBoost",
+  "version": "1.0.0",
+  "description": "Free DOM-based performance analyzer for Bubble.io. 7 checks with actionable fixes.",
+  "author": "",
+  "license": "MIT",
+  "scripts": {
+    "dev": "plasmo dev",
+    "build": "plasmo build",
+    "package": "plasmo package",
+    "type-check": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@plasmohq/storage": "^1.15.0",
+    "@types/chrome": "^0.1.36",
+    "@types/react": "^19.2.9",
+    "@types/react-dom": "^19.2.3",
+    "autoprefixer": "^10.4.23",
+    "plasmo": "^0.90.5",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^3.4.19",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "react": "^19.2.3",
+    "react-dom": "^19.2.3"
+  },
+  "manifest": {
+    "host_permissions": [
+      "https://*.bubble.io/*"
+    ],
+    "permissions": [
+      "storage",
+      "activeTab"
+    ]
+  }
+}
