@@ -109,7 +109,7 @@
       "description": "Score 0-100. Critical=-15pts, Warning=-5pts. Before saving new score, store current as previousScore. Deterministic.",
       "done_criteria": "Same page = same score. previousScore updates on each analysis.",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-013",

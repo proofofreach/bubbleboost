@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useStore } from "~lib/store"
 import { ScoreBadge } from "~components/ScoreBadge"
+import { runAnalysisWithHistory } from "~lib/scoring"
 import cssText from "data-text:~style.css"
 
 export const config: PlasmoCSConfig = {
@@ -29,15 +30,32 @@ function isBubbleEditorPage(): boolean {
 
 function ContentScript() {
   const setIsActive = useStore((state) => state.setIsActive)
+  const setScore = useStore((state) => state.setScore)
+  const setPreviousScore = useStore((state) => state.setPreviousScore)
+  const setIssues = useStore((state) => state.setIssues)
 
+  // Helper to get current state without subscribing to changes
+  const getState = () => useStore.getState()
+
+  // Run analysis once on mount and on URL changes
   useEffect(() => {
     const isEditor = isBubbleEditorPage()
     setIsActive(isEditor)
+
+    // Run initial analysis if on editor page
+    if (isEditor) {
+      runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+    }
 
     // Re-check on URL changes (for SPA navigation)
     const handleUrlChange = () => {
       const newIsEditor = isBubbleEditorPage()
       setIsActive(newIsEditor)
+
+      // Run analysis when navigating to editor page
+      if (newIsEditor) {
+        runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+      }
     }
 
     // Listen for popstate (back/forward navigation)
@@ -62,7 +80,7 @@ function ContentScript() {
       history.pushState = originalPushState
       history.replaceState = originalReplaceState
     }
-  }, [setIsActive])
+  }, [setIsActive, setScore, setPreviousScore, setIssues])
 
   return <ScoreBadge />
 }
