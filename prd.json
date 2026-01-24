@@ -10,7 +10,7 @@
       "description": "Set up Plasmo with TypeScript, React, Tailwind CSS, Manifest V3",
       "done_criteria": "Extension builds and loads in Chrome without errors",
       "validation_steps": ["pnpm run build", "pnpm run type-check"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-002",
