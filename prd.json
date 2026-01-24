@@ -64,7 +64,7 @@
       "description": "Count elements not hidden via display:none or visibility:hidden. Warn >50, critical >100.",
       "done_criteria": "Returns status, count, benchmark text ('Best practice: under 50')",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-008",
