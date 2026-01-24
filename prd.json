@@ -1,336 +1,160 @@
 {
   "project": "BubbleBoost",
   "branchName": "ralph/bubbleboost-mvp",
-  "description": "BubbleBoost Chrome Extension - Performance analyzer for Bubble.io apps with real-time scoring and fix suggestions",
+  "description": "Free DOM-based performance analyzer for Bubble.io. 7 checks with clear, actionable fixes. No backend, no AI.",
   "userStories": [
     {
       "id": "US-001",
-      "title": "Initialize Plasmo extension project with TypeScript",
-      "description": "Set up the foundational Plasmo project structure with TypeScript, React, and Tailwind CSS configured",
-      "acceptanceCriteria": [
-        "Run: pnpm create plasmo bubbleboost --with-tailwindcss",
-        "Update manifest to use Manifest V3",
-        "Configure permissions: activeTab, storage only",
-        "Add content script match pattern for *.bubble.io/*",
-        "npm run build succeeds",
-        "Typecheck passes"
-      ],
-      "priority": 1,
-      "passes": false,
-      "notes": ""
+      "category": "setup",
+      "title": "Initialize Plasmo extension project",
+      "description": "Set up Plasmo with TypeScript, React, Tailwind CSS, Manifest V3",
+      "done_criteria": "Extension builds and loads in Chrome without errors",
+      "validation_steps": ["pnpm run build", "pnpm run type-check"],
+      "passes": false
     },
     {
       "id": "US-002",
-      "title": "Add Zustand store for extension state",
-      "description": "Create state management for score, issues, and UI state",
-      "acceptanceCriteria": [
-        "Install zustand package",
-        "Create store with: score (number), issues (array), isActive (boolean), isPremium (boolean)",
-        "Add actions: setScore, addIssue, clearIssues, setActive, setPremium",
-        "Store persists to chrome.storage.local",
-        "Typecheck passes"
-      ],
-      "priority": 2,
-      "passes": false,
-      "notes": ""
+      "category": "state",
+      "title": "Add Zustand store with chrome.storage",
+      "description": "Store: score, issues array, isActive, panelOpen. Persist to chrome.storage.local",
+      "done_criteria": "State persists across extension reloads",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-003",
-      "title": "Create Bubble editor detection in content script",
-      "description": "Detect when user is on Bubble editor and activate extension",
-      "acceptanceCriteria": [
-        "Content script runs on *.bubble.io/* pages",
-        "Detects editor URLs: /page*, /version-*, /edit*",
-        "Sets isActive=true in store when on editor",
-        "Sets isActive=false on non-editor pages",
-        "Sends message to background script on state change",
-        "Typecheck passes"
-      ],
-      "priority": 3,
-      "passes": false,
-      "notes": ""
+      "category": "detection",
+      "title": "Detect Bubble editor pages",
+      "description": "Content script activates on *.bubble.io/page*, /version-*, /edit* URLs",
+      "done_criteria": "isActive=true on editor, false elsewhere",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-004",
-      "title": "Create floating score badge component",
-      "description": "Build the draggable floating badge that shows performance score",
-      "acceptanceCriteria": [
-        "Badge renders in bottom-right corner of page",
-        "Shows score 0-100 with color: green (80-100), yellow (50-79), red (0-49)",
-        "Badge is draggable to reposition",
-        "Position persists in storage",
-        "Clicking badge dispatches 'openPanel' action",
-        "Badge has minimize/expand toggle",
-        "Typecheck passes"
-      ],
-      "priority": 4,
-      "passes": false,
-      "notes": ""
+      "category": "ui",
+      "title": "Create floating score badge",
+      "description": "Bottom-right badge showing 0-100. Green 80+, yellow 50-79, red <50. Draggable, position persists. Click opens panel.",
+      "done_criteria": "Badge visible, draggable, color-coded, clickable",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-005",
-      "title": "Implement first 5 DOM analysis checks",
-      "description": "Create analyzers for element count, repeating group nesting, visible elements, condition complexity, custom states",
-      "acceptanceCriteria": [
-        "Check 1: Count total elements, warn >100, critical >200",
-        "Check 2: Detect repeating group nesting, warn >2 levels",
-        "Check 3: Count visible elements on load, warn >50",
-        "Check 4: Count conditions per element, warn >5",
-        "Check 5: Count custom states, warn >20",
-        "Each check returns: id, name, status (pass/warn/critical), count, message",
-        "Typecheck passes"
-      ],
-      "priority": 5,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 1: Element count",
+      "description": "Count DOM elements with [data-element-id] or Bubble class markers. Warn >200, critical >500.",
+      "done_criteria": "Returns status, count, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-006",
-      "title": "Implement checks 6-10: reusable duplication, images, dynamic text, hidden elements, group nesting",
-      "description": "Add analyzers for reusable elements, image dimensions, dynamic text, hidden elements, group nesting depth",
-      "acceptanceCriteria": [
-        "Check 6: Detect same reusable element >3 times, warn",
-        "Check 7: Find images without width/height constraints, warn",
-        "Check 8: Count text elements with dynamic expressions, info",
-        "Check 9: Count hidden but loaded elements, warn >20",
-        "Check 10: Measure group nesting depth, warn >5 levels",
-        "All checks follow same return interface as US-005",
-        "Typecheck passes"
-      ],
-      "priority": 6,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 2: RG nesting depth",
+      "description": "Detect nested repeating groups via DOM traversal. Warn >1 level, critical >2 levels.",
+      "done_criteria": "Returns status, max depth found, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-007",
-      "title": "Implement checks 11-15: floating groups, input validation, option sets, plugins, workflows",
-      "description": "Add final 5 analyzers for floating groups, input validation, option sets, plugins, workflow triggers",
-      "acceptanceCriteria": [
-        "Check 11: Count floating groups, warn >3",
-        "Check 12: Detect complex input validation, warn >3 rules per input",
-        "Check 13: Find large option sets, warn >50 options",
-        "Check 14: Count plugins on page, warn >5",
-        "Check 15: Count workflow triggers, warn >10 per page",
-        "All checks follow same return interface",
-        "Typecheck passes"
-      ],
-      "priority": 7,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 3: Visible elements on load",
+      "description": "Count elements not hidden via display:none or visibility:hidden. Warn >50, critical >100.",
+      "done_criteria": "Returns status, count, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-008",
-      "title": "Create score calculation engine",
-      "description": "Build deterministic scoring algorithm that weighs all 15 checks",
-      "acceptanceCriteria": [
-        "Score ranges 0-100",
-        "Critical issues deduct 10 points each",
-        "Warning issues deduct 3 points each",
-        "Info issues deduct 0 points",
-        "Same page state produces identical score every time",
-        "Score updates stored in Zustand",
-        "Typecheck passes"
-      ],
-      "priority": 8,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 4: Hidden but loaded",
+      "description": "Count elements with display:none that have data-source attributes. Warn >20.",
+      "done_criteria": "Returns status, count, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-009",
-      "title": "Create issue breakdown panel UI",
-      "description": "Build the main panel that displays all detected issues organized by severity",
-      "acceptanceCriteria": [
-        "Panel opens when badge is clicked",
-        "Issues grouped by severity: Critical (red), Warning (yellow), Info (blue)",
-        "Each issue shows: title, count, impact description",
-        "Panel header shows totals: 'X Critical, Y Warnings, Z Info'",
-        "Panel has close button",
-        "Panel is scrollable for many issues",
-        "Typecheck passes"
-      ],
-      "priority": 9,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 5: Images without dimensions",
+      "description": "Find img tags without width/height attributes or inline styles. Any = warning.",
+      "done_criteria": "Returns status, count, list of elements",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-010",
-      "title": "Add fix suggestions data and UI",
-      "description": "Create fix suggestion templates for each check type and display in panel",
-      "acceptanceCriteria": [
-        "Each of 15 checks has associated fix suggestion template",
-        "Suggestions include: title, description, steps to fix",
-        "Clicking issue expands to show fix suggestion",
-        "Fix text is copy-able to clipboard",
-        "Each fix shows estimated impact: High/Medium/Low",
-        "Typecheck passes"
-      ],
-      "priority": 10,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 6: RG cell element count",
+      "description": "Count elements inside each RG cell. Warn if any cell has >5 elements (multiplicative effect).",
+      "done_criteria": "Returns status, max elements per cell, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-011",
-      "title": "Add auto-analysis trigger with debouncing",
-      "description": "Automatically run analysis when page loads and when DOM changes",
-      "acceptanceCriteria": [
-        "Analysis runs automatically on page load",
-        "MutationObserver detects DOM changes",
-        "Changes debounced to 2 seconds before re-analysis",
-        "Score badge updates within 3 seconds of changes",
-        "Results cached until next change",
-        "Typecheck passes"
-      ],
-      "priority": 11,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Implement Check 7: Group nesting depth",
+      "description": "Measure deepest group-in-group nesting. Warn >5 levels, critical >8.",
+      "done_criteria": "Returns status, max depth, message",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-012",
-      "title": "Add network request monitoring",
-      "description": "Intercept and analyze network requests to Bubble backend",
-      "acceptanceCriteria": [
-        "Use chrome.webRequest API to intercept requests",
-        "Track: request count, total bytes, response times",
-        "Flag queries returning >100 rows as warning",
-        "Flag API calls >2 seconds as warning",
-        "Group requests by type: database, workflow, external",
-        "Display network stats in panel",
-        "Typecheck passes"
-      ],
-      "priority": 12,
-      "passes": false,
-      "notes": ""
+      "category": "scoring",
+      "title": "Create score calculation engine",
+      "description": "Score 0-100. Critical=-15pts, Warning=-5pts. Deterministic.",
+      "done_criteria": "Same page state = same score every time",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-013",
-      "title": "Add premium feature gates with lock icons",
-      "description": "Show lock icons on premium features and upgrade prompts",
-      "acceptanceCriteria": [
-        "Lock icon appears on: PDF Export, JSON Deep Scan, AI Explanations",
-        "Clicking locked feature shows upgrade modal",
-        "Modal explains premium benefits",
-        "Modal has 'Upgrade' button placeholder (links to #)",
-        "isPremium flag in store controls gate visibility",
-        "Typecheck passes"
-      ],
-      "priority": 13,
-      "passes": false,
-      "notes": ""
+      "category": "ui",
+      "title": "Create issue panel with fixes",
+      "description": "Panel shows issues grouped by severity. Each issue expands to show fix template with steps and docs link.",
+      "done_criteria": "All 7 checks have actionable fix content",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-014",
-      "title": "Add JSON deep scan UI (premium placeholder)",
-      "description": "Create UI for JSON export analysis feature gated behind premium",
-      "acceptanceCriteria": [
-        "Deep Scan button in panel (locked for free)",
-        "Premium users see file upload input",
-        "Upload accepts .json files only",
-        "Placeholder message: 'JSON analysis coming soon'",
-        "Feature gate respects isPremium flag",
-        "Typecheck passes"
-      ],
-      "priority": 14,
-      "passes": false,
-      "notes": ""
+      "category": "analysis",
+      "title": "Add auto-analysis with MutationObserver",
+      "description": "Run analysis on page load and DOM changes. Debounce 2s. Cache results.",
+      "done_criteria": "Score updates within 3s of changes",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-015",
-      "title": "Add PDF export with jsPDF (premium)",
-      "description": "Generate PDF report of analysis results for premium users",
-      "acceptanceCriteria": [
-        "Install jspdf package",
-        "Export button in panel (locked for free)",
-        "Premium users can generate PDF",
-        "PDF includes: score, issue breakdown, fix recommendations",
-        "PDF includes timestamp and BubbleBoost branding",
-        "PDF generated client-side only",
-        "Typecheck passes"
-      ],
-      "priority": 15,
-      "passes": false,
-      "notes": ""
+      "category": "ui",
+      "title": "Add extension popup",
+      "description": "Popup shows score, status, issue summary, Open Panel button, GitHub link",
+      "done_criteria": "Popup displays correct state",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-016",
-      "title": "Integrate PostHog analytics",
-      "description": "Add PostHog tracking for key user events",
-      "acceptanceCriteria": [
-        "Install posthog-js package",
-        "Initialize PostHog in background script",
-        "Track events: scan_started, scan_completed, issue_clicked, fix_viewed, upgrade_clicked",
-        "Use anonymous user IDs only (no PII)",
-        "Respect Do Not Track browser setting",
-        "Typecheck passes"
-      ],
-      "priority": 16,
-      "passes": false,
-      "notes": ""
+      "category": "ui",
+      "title": "Add badge icon state",
+      "description": "Badge shows score number, color matches score, gray when inactive",
+      "done_criteria": "Badge updates via chrome.action API",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
     },
     {
       "id": "US-017",
-      "title": "Add Supabase license validation",
-      "description": "Check premium license status against Supabase on extension load",
-      "acceptanceCriteria": [
-        "Install @supabase/supabase-js package",
-        "Create Supabase client with anon key (env var placeholder)",
-        "On extension load, check license table for user",
-        "Store isPremium status in Zustand",
-        "Cache license status for 24 hours",
-        "Handle offline gracefully (use cached status)",
-        "Typecheck passes"
-      ],
-      "priority": 17,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-018",
-      "title": "Add extension popup with quick stats",
-      "description": "Create browser action popup showing quick status and score",
-      "acceptanceCriteria": [
-        "Popup shows: current score, active/inactive status, issue count summary",
-        "Popup shows 'Open Panel' button when on Bubble editor",
-        "Popup shows 'Not on Bubble Editor' message when inactive",
-        "Popup has settings link",
-        "Popup has upgrade CTA for free users",
-        "Typecheck passes"
-      ],
-      "priority": 18,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-019",
-      "title": "Add badge icon state management",
-      "description": "Update extension badge icon and text based on state",
-      "acceptanceCriteria": [
-        "Badge shows 'ON' text when on Bubble editor",
-        "Badge shows score number when analysis complete",
-        "Badge background color matches score: green/yellow/red",
-        "Badge shows gray when inactive (not on Bubble)",
-        "Badge updates via chrome.action API",
-        "Typecheck passes"
-      ],
-      "priority": 19,
-      "passes": false,
-      "notes": ""
-    },
-    {
-      "id": "US-020",
-      "title": "Final build verification and cleanup",
-      "description": "Verify all quality gates pass and extension builds for Chrome Web Store",
-      "acceptanceCriteria": [
-        "npm run lint passes with no errors",
-        "npm run type-check passes with no errors",
-        "npm run test passes (or no tests configured)",
-        "npm run build produces valid .zip for Chrome Web Store",
-        "Extension loads in Chrome without errors",
-        "All features work in manual testing",
-        "Typecheck passes"
-      ],
-      "priority": 20,
-      "passes": false,
-      "notes": ""
+      "category": "release",
+      "title": "Final build and README",
+      "description": "All quality gates pass. README documents 7 checks and installation.",
+      "done_criteria": "pnpm run build produces .zip, extension loads clean",
+      "validation_steps": ["pnpm run lint", "pnpm run type-check", "pnpm run build"],
+      "passes": false
     }
   ]
 }

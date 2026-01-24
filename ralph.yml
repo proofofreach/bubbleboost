@@ -1,0 +1,10 @@
+cli:
+  backend: claude
+  default_mode: autonomous
+
+event_loop:
+  max_iterations: 50
+  completion_promise: LOOP_COMPLETE
+
+core:
+  prompt_file: PROMPT.md
