@@ -154,7 +154,7 @@
       "description": "Badge shows score number, color matches score, gray when inactive",
       "done_criteria": "Badge updates via chrome.action API",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-018",
