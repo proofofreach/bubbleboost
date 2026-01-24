@@ -1,11 +1,21 @@
+import { registry } from "./registry"
+import type { Check } from "./types"
 import type { Issue } from "~lib/store"
+
+const CHECK_META = {
+  id: "group-nesting",
+  name: "Group nesting depth",
+  checkNumber: 7,
+  highlightable: true,
+  benchmark: "Best practice: under 5 levels of nesting",
+} as const
 
 /**
  * Check 7: Group nesting depth
  * Measure deepest group-in-group nesting.
  * Warn >5, critical >8.
  */
-export function checkGroupNestingDepth(): Issue | null {
+function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[] } | null {
   // Find all Bubble groups - they typically have class containing "Group" but not "RepeatingGroup"
   const allElements = document.querySelectorAll('[data-element-id], [class*="Group"]')
 
@@ -67,21 +77,44 @@ export function checkGroupNestingDepth(): Issue | null {
   }
 
   // Determine severity
-  let severity: "critical" | "warning" | "info"
-  if (maxDepth > 8) {
-    severity = "critical"
-  } else {
-    severity = "warning"
-  }
+  const severity: Issue["severity"] = maxDepth > 8 ? "critical" : "warning"
+
+  return { value: maxDepth, severity, elements: deepestChain }
+}
+
+const groupNestingDepthCheck: Check = {
+  meta: CHECK_META,
+  run: () => {
+    const result = runCheck()
+    if (result === null) return null
+    return {
+      value: result.value,
+      message: `Groups nested ${result.value} levels deep`,
+      elements: result.elements,
+    }
+  },
+}
+
+// Self-register with the registry
+registry.register(groupNestingDepthCheck)
+
+/**
+ * Legacy function for backward compatibility.
+ */
+export function checkGroupNestingDepth(): Issue | null {
+  const result = runCheck()
+  if (result === null) return null
 
   return {
-    id: "check-7-group-nesting",
-    checkNumber: 7,
-    title: "Group nesting depth",
-    severity,
-    count: maxDepth,
-    message: `Groups nested ${maxDepth} levels deep`,
-    benchmark: "Best practice: under 5 levels of nesting",
-    elements: deepestChain,
+    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
+    checkNumber: CHECK_META.checkNumber,
+    title: CHECK_META.name,
+    severity: result.severity,
+    count: result.value,
+    message: `Groups nested ${result.value} levels deep`,
+    benchmark: CHECK_META.benchmark,
+    elements: result.elements,
   }
 }
+
+export { groupNestingDepthCheck }

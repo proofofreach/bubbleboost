@@ -1,11 +1,21 @@
+import { registry } from "./registry"
+import type { Check } from "./types"
 import type { Issue } from "~lib/store"
+
+const CHECK_META = {
+  id: "rg-cell-count",
+  name: "RG cell element count",
+  checkNumber: 6,
+  highlightable: true,
+  benchmark: "Best practice: 3-5 elements per cell",
+} as const
 
 /**
  * Check 6: RG cell element count
  * Count elements inside each RG cell.
  * Warn if any cell has >5 elements.
  */
-export function checkRgCellElementCount(): Issue | null {
+function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[]; bloatedCount: number } | null {
   // Find all repeating groups
   const repeatingGroups = document.querySelectorAll(
     '[class*="RepeatingGroup"], [data-element-id*="RepeatingGroup"]'
@@ -46,14 +56,42 @@ export function checkRgCellElementCount(): Issue | null {
     return null
   }
 
+  return { value: maxPerCell, severity: "warning", elements: bloatedCells, bloatedCount: bloatedCells.length }
+}
+
+const rgCellElementCountCheck: Check = {
+  meta: CHECK_META,
+  run: () => {
+    const result = runCheck()
+    if (result === null) return null
+    return {
+      value: result.value,
+      message: `RG cells have up to ${result.value} elements (${result.bloatedCount} bloated ${result.bloatedCount === 1 ? "cell" : "cells"})`,
+      elements: result.elements,
+    }
+  },
+}
+
+// Self-register with the registry
+registry.register(rgCellElementCountCheck)
+
+/**
+ * Legacy function for backward compatibility.
+ */
+export function checkRgCellElementCount(): Issue | null {
+  const result = runCheck()
+  if (result === null) return null
+
   return {
-    id: "check-6-rg-cell-count",
-    checkNumber: 6,
-    title: "RG cell element count",
-    severity: "warning",
-    count: maxPerCell,
-    message: `RG cells have up to ${maxPerCell} elements (${bloatedCells.length} bloated ${bloatedCells.length === 1 ? "cell" : "cells"})`,
-    benchmark: "Best practice: 3-5 elements per cell",
-    elements: bloatedCells,
+    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
+    checkNumber: CHECK_META.checkNumber,
+    title: CHECK_META.name,
+    severity: result.severity,
+    count: result.value,
+    message: `RG cells have up to ${result.value} elements (${result.bloatedCount} bloated ${result.bloatedCount === 1 ? "cell" : "cells"})`,
+    benchmark: CHECK_META.benchmark,
+    elements: result.elements,
   }
 }
+
+export { rgCellElementCountCheck }

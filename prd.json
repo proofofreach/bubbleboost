@@ -28,7 +28,7 @@
       "description": "Create CheckRegistry class that auto-discovers checks. Each check exports metadata (id, name, highlightable, benchmark). Remove manual wiring.",
       "done_criteria": "Adding a new check requires only creating the file, no index.ts changes",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "RF-004",

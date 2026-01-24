@@ -1,4 +1,14 @@
+import { registry } from "./registry"
+import type { Check } from "./types"
 import type { Issue } from "~lib/store"
+
+const CHECK_META = {
+  id: "hidden-loaded",
+  name: "Hidden but loaded",
+  checkNumber: 4,
+  highlightable: true,
+  benchmark: "Best practice: under 20 hidden data sources",
+} as const
 
 /**
  * Check 4: Hidden but loaded
@@ -6,7 +16,7 @@ import type { Issue } from "~lib/store"
  * These are elements loading data but not visible - a performance waste.
  * Warn >20.
  */
-export function checkHiddenButLoaded(): Issue | null {
+function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[] } | null {
   // Find all elements with data-source attribute (Bubble's data binding)
   const elementsWithDataSource = document.querySelectorAll("[data-source]")
 
@@ -26,14 +36,42 @@ export function checkHiddenButLoaded(): Issue | null {
     return null
   }
 
+  return { value: count, severity: "warning", elements: hiddenLoadedElements }
+}
+
+const hiddenButLoadedCheck: Check = {
+  meta: CHECK_META,
+  run: () => {
+    const result = runCheck()
+    if (result === null) return null
+    return {
+      value: result.value,
+      message: `${result.value} hidden elements are still loading data`,
+      elements: result.elements,
+    }
+  },
+}
+
+// Self-register with the registry
+registry.register(hiddenButLoadedCheck)
+
+/**
+ * Legacy function for backward compatibility.
+ */
+export function checkHiddenButLoaded(): Issue | null {
+  const result = runCheck()
+  if (result === null) return null
+
   return {
-    id: "check-4-hidden-loaded",
-    checkNumber: 4,
-    title: "Hidden but loaded",
-    severity: "warning",
-    count,
-    message: `${count} hidden elements are still loading data`,
-    benchmark: "Best practice: under 20 hidden data sources",
-    elements: hiddenLoadedElements,
+    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
+    checkNumber: CHECK_META.checkNumber,
+    title: CHECK_META.name,
+    severity: result.severity,
+    count: result.value,
+    message: `${result.value} hidden elements are still loading data`,
+    benchmark: CHECK_META.benchmark,
+    elements: result.elements,
   }
 }
+
+export { hiddenButLoadedCheck }

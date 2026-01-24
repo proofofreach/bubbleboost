@@ -1,11 +1,21 @@
+import { registry } from "./registry"
+import type { Check } from "./types"
 import type { Issue } from "~lib/store"
+
+const CHECK_META = {
+  id: "element-count",
+  name: "Element count",
+  checkNumber: 1,
+  highlightable: false,
+  benchmark: "Best practice: under 100 elements",
+} as const
 
 /**
  * Check 1: Element count
  * Count DOM elements with [data-element-id] or Bubble class markers.
  * Warn >200, critical >500.
  */
-export function checkElementCount(): Issue | null {
+function runCheck(): { value: number; severity: Issue["severity"] } | null {
   // Count elements with Bubble markers
   const elementsWithDataId = document.querySelectorAll("[data-element-id]")
   const elementsWithBubbleClass = document.querySelectorAll(
@@ -20,23 +30,47 @@ export function checkElementCount(): Issue | null {
   const count = allElements.size
 
   // Determine severity
-  let severity: "critical" | "warning" | "info"
   if (count > 500) {
-    severity = "critical"
+    return { value: count, severity: "critical" }
   } else if (count > 200) {
-    severity = "warning"
-  } else {
-    return null // No issue
+    return { value: count, severity: "warning" }
   }
 
+  return null // No issue
+}
+
+const elementCountCheck: Check = {
+  meta: CHECK_META,
+  run: () => {
+    const result = runCheck()
+    if (result === null) return null
+    return {
+      value: result.value,
+      message: `Found ${result.value} Bubble elements on the page`,
+    }
+  },
+}
+
+// Self-register with the registry
+registry.register(elementCountCheck)
+
+/**
+ * Legacy function for backward compatibility.
+ * Returns an Issue directly (used by existing scoring.ts).
+ */
+export function checkElementCount(): Issue | null {
+  const result = runCheck()
+  if (result === null) return null
+
   return {
-    id: "check-1-element-count",
-    checkNumber: 1,
-    title: "Element count",
-    severity,
-    count,
-    message: `Found ${count} Bubble elements on the page`,
-    benchmark: "Best practice: under 100 elements",
-    // Note: elements are not stored for this aggregate check (US-014)
+    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
+    checkNumber: CHECK_META.checkNumber,
+    title: CHECK_META.name,
+    severity: result.severity,
+    count: result.value,
+    message: `Found ${result.value} Bubble elements on the page`,
+    benchmark: CHECK_META.benchmark,
   }
 }
+
+export { elementCountCheck }
