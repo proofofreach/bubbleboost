@@ -73,3 +73,24 @@ export const useStore = create<BubbleBoostState>()(
     }
   )
 )
+
+// Listen for external chrome.storage changes (e.g., from popup)
+// Only sync panelOpen - isActive is controlled by content script URL detection
+if (typeof chrome !== 'undefined' && chrome.storage?.local?.onChanged) {
+  chrome.storage.local.onChanged.addListener((changes) => {
+    if (changes['bubbleboost-storage']) {
+      try {
+        const newValue = changes['bubbleboost-storage'].newValue
+        if (typeof newValue === 'string') {
+          const parsed = JSON.parse(newValue)
+          if (parsed.state && parsed.state.panelOpen !== undefined) {
+            const { setPanelOpen } = useStore.getState()
+            setPanelOpen(parsed.state.panelOpen)
+          }
+        }
+      } catch (e) {
+        console.error('Failed to sync external storage change:', e)
+      }
+    }
+  })
+}

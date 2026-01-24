@@ -1,16 +1,16 @@
-# BubbleBoost
-
 <div align="center">
 
-**Performance analyzer for Bubble.io apps**
+<img src="assets/logo.png" alt="BubbleBoost" height="48" />
+
+**Free performance analyzer for Bubble.io apps**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Chrome Web Store](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore)
 [![Manifest V3](https://img.shields.io/badge/Manifest-V3-green.svg)](https://developer.chrome.com/docs/extensions/mv3/)
+[![Chrome Extension](https://img.shields.io/badge/Chrome-Extension-4285F4?logo=googlechrome&logoColor=white)](https://chrome.google.com/webstore)
 
-**Real-time performance scoring for your Bubble apps. Find what's slowing you down.**
+Real-time performance scoring. Find what's slowing your Bubble app down.
 
-[Install Extension](#installation) · [How It Works](#how-it-works) · [Premium Features](#free-vs-premium)
+[Install](#installation) · [The 7 Checks](#the-7-checks) · [Contributing](#contributing)
 
 </div>
 
@@ -18,80 +18,64 @@
 
 ## TL;DR
 
-**The Problem**: Bubble apps with 1,000+ users often take 10-30 seconds to load. Developers spend $200-1,500/mo on upgrades or $50-200/hr on consultants, yet no dedicated performance tools exist.
+**The Problem**: Bubble.io apps frequently suffer 8-15 second load times. Nested repeating groups, too many elements, and hidden bloat are common causes—but there's no dedicated tool to find them.
 
-**The Solution**: BubbleBoost analyzes your Bubble app in real-time, scores performance 0-100, identifies 15 common issues, and tells you exactly how to fix them.
+**The Solution**: BubbleBoost analyzes your Bubble editor DOM in real-time, scores performance 0-100, and shows you exactly what to fix.
 
-### Why Use BubbleBoost?
+### Why BubbleBoost?
 
 | Feature | What It Does |
 |---------|--------------|
-| **Real-time Score** | 0-100 performance score updates as you edit |
-| **15 Automated Checks** | Detects element bloat, nesting issues, query problems |
-| **Severity Classification** | Critical, Warning, Info — know what to fix first |
-| **Copy-Paste Fixes** | Actionable suggestions, not vague advice |
+| **Real-time Score** | 0-100 score updates as you edit, with delta tracking (+12 pts) |
+| **7 Targeted Checks** | Catches the issues that actually slow Bubble apps |
+| **Actionable Fixes** | Copy-paste solutions, not vague advice |
+| **Element Highlighting** | Click an issue → see exactly which element to fix |
 | **Zero Setup** | Works instantly on any Bubble editor page |
 
 ---
 
 ## Quick Example
 
-1. Install from Chrome Web Store
-2. Open your Bubble app editor
-3. See your score immediately
-
 ```
 ┌─────────────────────────────────────┐
-│  BubbleBoost                    72  │  ← Your performance score
+│  BubbleBoost                  78    │  ← Score (green = good)
+│                              +12    │  ← Improved since last check
 ├─────────────────────────────────────┤
-│  2 Critical · 5 Warnings · 3 Info   │
+│  1 Critical · 3 Warnings            │
 ├─────────────────────────────────────┤
-│  ⛔ Element count: 247 (>200)       │
+│  ⛔ RG nesting: 3 levels            │  ← Click to highlight
+│     Best practice: max 1 level      │
+│     → Use hidden RG pattern         │
+│                                     │
+│  ⚠️ Element count: 247              │
+│     Best practice: under 200        │
 │     → Split into reusable elements  │
-│                                     │
-│  ⚠️ Repeating group nesting: 3      │
-│     → Flatten to max 2 levels       │
-│                                     │
-│  ⚠️ Hidden elements loaded: 34      │
-│     → Use conditions on group level │
 └─────────────────────────────────────┘
 ```
 
 ---
 
-## How It Works
+## The 7 Checks
 
-BubbleBoost runs **15 rule-based checks** on your Bubble editor DOM:
+| # | Check | Threshold | What to Fix |
+|---|-------|-----------|-------------|
+| 1 | **Element count** | >200 warn, >500 critical | Split into reusable elements |
+| 2 | **RG nesting depth** | >1 warn, >2 critical | Use hidden RG pattern |
+| 3 | **Visible on load** | >50 warn, >100 critical | Set "visible on page load" = NO |
+| 4 | **Hidden but loaded** | >20 warn | Add "only when visible" condition |
+| 5 | **Images no dimensions** | Any = warn | Set fixed width/height |
+| 6 | **RG cell elements** | >5 per cell = warn | Keep 3-5 elements max |
+| 7 | **Group nesting** | >5 warn, >8 critical | Flatten or extract to reusable |
 
-| # | Check | Threshold |
-|---|-------|-----------|
-| 1 | Element count | Warn >100, Critical >200 |
-| 2 | Repeating group nesting | Warn >2 levels |
-| 3 | Visible elements on load | Warn >50 |
-| 4 | Condition complexity | Warn >5 per element |
-| 5 | Custom states | Warn >20 per page |
-| 6 | Reusable element duplication | Warn >3 instances |
-| 7 | Images without dimensions | Any = Warning |
-| 8 | Dynamic text expressions | Info (count) |
-| 9 | Hidden elements loaded | Warn >20 |
-| 10 | Group nesting depth | Warn >5 levels |
-| 11 | Floating groups | Warn >3 |
-| 12 | Input validation complexity | Warn >3 rules/input |
-| 13 | Large option sets | Warn >50 options |
-| 14 | Plugin count | Warn >5 |
-| 15 | Workflow triggers | Warn >10 per page |
-
-**Scoring**: Start at 100. Critical issues deduct 10 points, warnings deduct 3 points. Same page = same score, every time.
+**Why these 7?** They're DOM-detectable AND have clear, actionable fixes. We excluded custom states (they actually help performance), floating groups (no clear fix), and plugins/workflows (not in DOM).
 
 ---
 
 ## Installation
 
-### Chrome Web Store (Recommended)
+### Chrome Web Store
 
-1. Visit the [Chrome Web Store listing](#) *(coming soon)*
-2. Click "Add to Chrome"
-3. Open any Bubble editor page — BubbleBoost activates automatically
+*Coming soon*
 
 ### From Source (Development)
 
@@ -102,23 +86,7 @@ pnpm install
 pnpm dev
 ```
 
-Then load the `build/chrome-mv3-dev` folder as an unpacked extension in Chrome.
-
----
-
-## Free vs Premium
-
-| Feature | Free | Premium ($49/mo) |
-|---------|:----:|:----------------:|
-| Performance score (0-100) | ✅ | ✅ |
-| 15 rule-based checks | ✅ | ✅ |
-| Issue breakdown by severity | ✅ | ✅ |
-| Generic fix suggestions | ✅ | ✅ |
-| JSON deep analysis | ❌ | ✅ |
-| PDF export for clients | ❌ | ✅ |
-| AI-powered explanations | ❌ | ✅ *(future)* |
-
-**Free tier is fully functional** — premium adds agency/consultant features.
+Load `build/chrome-mv3-dev` as an unpacked extension in Chrome.
 
 ---
 
@@ -130,118 +98,75 @@ Then load the `build/chrome-mv3-dev` folder as an unpacked extension in Chrome.
 ├─────────────────────────────────────────────────────────┤
 │  Content Script          │  Popup UI (React)            │
 │  - DOM analysis          │  - Score display             │
-│  - Network monitoring    │  - Issue panel               │
-│  - Message passing       │  - Settings                  │
+│  - 7 performance checks  │  - Issue panel               │
+│  - Element highlighting  │  - Delta tracking            │
 ├─────────────────────────────────────────────────────────┤
 │  Background Service Worker                               │
-│  - Analytics dispatch    │  - License validation        │
-│  - Storage management    │  - PDF generation            │
+│  - Badge updates         │  - Storage management        │
 └─────────────────────────────────────────────────────────┘
-         │                           │
-         ▼                           ▼
-┌─────────────────┐        ┌─────────────────┐
-│    PostHog      │        │    Supabase     │
-│   (Analytics)   │        │  (Auth/License) │
-└─────────────────┘        └─────────────────┘
 ```
 
 ### Tech Stack
 
 | Component | Technology |
 |-----------|------------|
-| Extension Framework | [Plasmo](https://docs.plasmo.com/) |
+| Framework | [Plasmo](https://docs.plasmo.com/) |
 | UI | React + Tailwind CSS |
-| State | Zustand |
-| PDF Generation | jsPDF (client-side) |
-| Analytics | PostHog |
-| Auth/License | Supabase |
-| Payments | Stripe |
+| State | Zustand + chrome.storage |
+| Manifest | V3 |
+
+No backend. No AI. No tracking. Everything runs locally in your browser.
 
 ---
 
 ## Limitations
 
-### What BubbleBoost Doesn't Do (Yet)
+### What BubbleBoost Doesn't Do
 
-- **Auto-fix** — You apply fixes manually (we just tell you what to fix)
-- **Historical tracking** — No trend analysis over time
-- **Production monitoring** — Editor analysis only, not live apps
-- **Multi-app dashboards** — One app at a time
-- **Firefox/Edge** — Chrome only for MVP
+- **JSON deep scan** — Can't detect search-in-RG-cell (the #1 performance killer). Planned for v2.
+- **Plugin/workflow analysis** — Not visible in DOM
+- **Production monitoring** — Editor analysis only
+- **Auto-fix** — Shows you what to fix, you apply it manually
 
 ### Known Constraints
 
 | Constraint | Reason |
 |------------|--------|
-| DOM-based analysis only | Can't access Bubble's internal state |
-| Editor pages only | Content script URL pattern limitation |
-| No remote code execution | Chrome Manifest V3 policy |
+| Editor pages only | Content script URL pattern |
+| Chrome only | MVP scope |
+| DOM-based analysis | Can't access Bubble internals |
 
 ---
 
 ## FAQ
 
-### Why "BubbleBoost"?
+### Is my data safe?
 
-Bubble apps need a boost. We boost them. Simple.
-
-### Is my app data safe?
-
-Yes. All analysis runs **locally in your browser**. No app data is sent to our servers. We only collect anonymous usage analytics (which checks you run, not what they find).
+Yes. All analysis runs locally in your browser. No data is sent anywhere.
 
 ### Does it work with all Bubble apps?
 
-Works on any app in the Bubble editor (`*.bubble.io/page*`, `*.bubble.io/version-*`). Does not analyze live/deployed apps.
-
-### Can I use this for client work?
-
-Absolutely. Premium tier includes PDF export specifically for sharing reports with clients.
+Works on any app in the Bubble editor (`*.bubble.io/page*`, `*.bubble.io/version-*`).
 
 ### Why rule-based instead of AI?
 
-Deterministic rules = consistent scores. Same page always gets the same score. AI explanations are planned for premium tier.
+Deterministic rules = consistent scores. Same page always gets the same score.
 
----
+### What's coming in v2?
 
-## Troubleshooting
-
-### Extension not activating on Bubble editor
-
-**Cause:** URL doesn't match expected pattern.
-
-**Solution:** Make sure you're on a page like `myapp.bubble.io/page/index` or `myapp.bubble.io/version-test/page/index`.
-
-### Score not updating after changes
-
-**Cause:** Debounce timer (2 seconds) hasn't elapsed.
-
-**Solution:** Wait 3 seconds after making changes. Score updates automatically.
-
-### "Premium feature" message on free tier
-
-**Cause:** You clicked a premium-only feature.
-
-**Solution:** Upgrade to premium, or use the free alternatives (all 15 checks are free).
-
-### Still having issues?
-
-1. Check [existing issues](https://github.com/ProofOfReach/bubbleboost/issues)
-2. Open a [new issue](https://github.com/ProofOfReach/bubbleboost/issues/new)
+JSON export deep scan to catch search-in-RG-cell (N+1 queries) and other issues invisible to DOM analysis.
 
 ---
 
 ## Contributing
 
-We welcome contributions! See our development setup:
-
 ```bash
 git clone https://github.com/ProofOfReach/bubbleboost.git
 cd bubbleboost
 pnpm install
-pnpm dev        # Development mode with hot reload
-pnpm build      # Production build
-pnpm test       # Run tests
-pnpm lint       # Lint code
+pnpm dev          # Development with hot reload
+pnpm build        # Production build
+pnpm type-check   # TypeScript validation
 ```
 
 ---
@@ -256,6 +181,6 @@ MIT License — see [LICENSE](LICENSE) for details.
 
 **Built for the Bubble community**
 
-[Report Bug](https://github.com/ProofOfReach/bubbleboost/issues) · [Request Feature](https://github.com/ProofOfReach/bubbleboost/issues) · [Get Premium](#free-vs-premium)
+[Report Bug](https://github.com/ProofOfReach/bubbleboost/issues) · [Request Feature](https://github.com/ProofOfReach/bubbleboost/issues)
 
 </div>

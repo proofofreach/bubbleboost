@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react"
 import "./style.css"
+import logoUrl from "data-base64:../assets/logo.png"
 
 interface Issue {
   id: string
@@ -19,28 +20,74 @@ interface StoredState {
   panelOpen: boolean
 }
 
-function getScoreColor(score: number): string {
-  if (score >= 80) return "bg-green-500"
-  if (score >= 50) return "bg-yellow-500"
-  return "bg-red-500"
+function getScoreRingColor(score: number): string {
+  if (score >= 80) return "#22c55e" // green-500
+  if (score >= 50) return "#f59e0b" // amber-500
+  return "#ef4444" // red-500
 }
 
-function getScoreTextColor(score: number): string {
-  if (score >= 80) return "text-green-600"
-  if (score >= 50) return "text-yellow-600"
-  return "text-red-600"
+function getScoreLabel(score: number): string {
+  if (score >= 90) return "Excellent"
+  if (score >= 80) return "Great"
+  if (score >= 60) return "Good"
+  if (score >= 40) return "Fair"
+  return "Needs Work"
 }
 
-function getDeltaDisplay(current: number, previous: number | null): { text: string; colorClass: string } | null {
+function getDeltaDisplay(current: number, previous: number | null): { text: string; isPositive: boolean } | null {
   if (previous === null) return null
   const delta = current - previous
   if (delta === 0) return null
 
-  if (delta > 0) {
-    return { text: `+${delta} pts`, colorClass: "text-green-500" }
-  } else {
-    return { text: `${delta} pts`, colorClass: "text-red-500" }
+  return {
+    text: delta > 0 ? `+${delta}` : `${delta}`,
+    isPositive: delta > 0
   }
+}
+
+// Circular progress ring component
+function ScoreRing({ score, size = 88 }: { score: number; size?: number }) {
+  const strokeWidth = 6
+  const radius = (size - strokeWidth) / 2
+  const circumference = radius * 2 * Math.PI
+  const progress = (score / 100) * circumference
+  const color = getScoreRingColor(score)
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg className="transform -rotate-90" width={size} height={size}>
+        {/* Background ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="rgba(255,255,255,0.1)"
+          strokeWidth={strokeWidth}
+        />
+        {/* Progress ring */}
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke={color}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          strokeDashoffset={circumference - progress}
+          style={{
+            filter: `drop-shadow(0 0 6px ${color}40)`,
+            transition: 'stroke-dashoffset 0.5s ease-out'
+          }}
+        />
+      </svg>
+      {/* Score text in center */}
+      <div className="absolute inset-0 flex flex-col items-center justify-center">
+        <span className="text-3xl font-bold text-white leading-none">{score}</span>
+      </div>
+    </div>
+  )
 }
 
 function Popup() {
@@ -97,8 +144,10 @@ function Popup() {
 
   if (loading) {
     return (
-      <div className="w-80 p-4 bg-white">
-        <p className="text-sm text-gray-500">Loading...</p>
+      <div className="w-80 p-5 bg-slate-900">
+        <div className="flex items-center justify-center h-32">
+          <div className="w-6 h-6 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
       </div>
     )
   }
@@ -110,93 +159,112 @@ function Popup() {
 
   const criticalCount = issues.filter(i => i.severity === 'critical').length
   const warningCount = issues.filter(i => i.severity === 'warning').length
+  const totalIssues = criticalCount + warningCount
 
   const delta = getDeltaDisplay(score, previousScore)
 
   return (
-    <div className="w-80 p-4 bg-white">
-      <div className="flex items-center justify-between mb-3">
-        <h1 className="text-xl font-bold text-gray-900">BubbleBoost</h1>
-        <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${
+    <div className="w-80 bg-slate-900 text-white">
+      {/* Header */}
+      <div className="px-5 pt-4 pb-3 flex items-center justify-between border-b border-white/10">
+        <img src={logoUrl} alt="BubbleBoost" className="h-6" />
+        <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
           isActive
-            ? "bg-green-100 text-green-700"
-            : "bg-gray-100 text-gray-500"
+            ? "bg-emerald-500/20 text-emerald-400"
+            : "bg-slate-700 text-slate-400"
         }`}>
+          <span className={`w-1.5 h-1.5 rounded-full ${isActive ? "bg-emerald-400" : "bg-slate-500"}`} />
           {isActive ? "Active" : "Inactive"}
-        </span>
+        </div>
       </div>
 
       {isActive ? (
-        <>
-          <div className="flex items-center gap-4 mb-4">
-            <div className={`${getScoreColor(score)} rounded-full w-16 h-16 flex flex-col items-center justify-center text-white shadow-md`}>
-              <span className="text-2xl font-bold leading-none">{score}</span>
-              {delta && (
-                <span className={`text-xs font-medium leading-none mt-0.5 ${delta.colorClass === 'text-green-500' ? 'text-green-200' : 'text-red-200'}`}>
-                  {delta.text}
-                </span>
-              )}
-            </div>
+        <div className="p-5">
+          {/* Score Section */}
+          <div className="flex items-center gap-5 mb-5">
+            <ScoreRing score={score} />
             <div className="flex-1">
-              <p className={`text-lg font-semibold ${getScoreTextColor(score)}`}>
-                {score >= 80 ? "Great" : score >= 50 ? "Needs Work" : "Critical"}
-              </p>
-              <p className="text-sm text-gray-500">
-                Performance Score
-              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-semibold text-white">{getScoreLabel(score)}</span>
+                {delta && (
+                  <span className={`text-sm font-medium ${delta.isPositive ? "text-emerald-400" : "text-red-400"}`}>
+                    {delta.text}
+                  </span>
+                )}
+              </div>
+              <p className="text-sm text-slate-400 mt-0.5">Performance Score</p>
             </div>
           </div>
 
-          {(criticalCount > 0 || warningCount > 0) ? (
-            <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-              <p className="text-xs font-medium text-gray-500 uppercase mb-2">Issues Found</p>
-              <div className="flex gap-4">
+          {/* Issues Section */}
+          <div className="mb-4 p-3.5 bg-slate-800/50 rounded-xl border border-white/5">
+            <div className="flex items-center justify-between mb-2.5">
+              <span className="text-xs font-medium text-slate-400 uppercase tracking-wide">Issues Found</span>
+              <span className="text-xs font-medium text-slate-500">{totalIssues} total</span>
+            </div>
+            {totalIssues > 0 ? (
+              <div className="flex gap-3">
                 {criticalCount > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                    <span className="text-sm text-gray-700">{criticalCount} Critical</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-red-500/10 rounded-lg">
+                    <svg className="w-4 h-4 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span className="text-sm font-medium text-red-400">{criticalCount}</span>
                   </div>
                 )}
                 {warningCount > 0 && (
-                  <div className="flex items-center gap-1.5">
-                    <span className="w-2 h-2 rounded-full bg-yellow-500"></span>
-                    <span className="text-sm text-gray-700">{warningCount} Warning{warningCount !== 1 ? 's' : ''}</span>
+                  <div className="flex items-center gap-2 px-3 py-1.5 bg-amber-500/10 rounded-lg">
+                    <svg className="w-4 h-4 text-amber-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span className="text-sm font-medium text-amber-400">{warningCount}</span>
                   </div>
                 )}
               </div>
-            </div>
-          ) : (
-            <div className="mb-4 p-3 bg-green-50 rounded-lg">
-              <p className="text-sm text-green-700">No issues found!</p>
-            </div>
-          )}
+            ) : (
+              <div className="flex items-center gap-2 text-emerald-400">
+                <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <span className="text-sm font-medium">All checks passed</span>
+              </div>
+            )}
+          </div>
 
+          {/* Open Panel Button */}
           <button
             onClick={openPanel}
-            className="w-full py-2 px-4 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 transition-colors mb-3"
+            className="w-full py-2.5 px-4 bg-blue-600 hover:bg-blue-500 text-white rounded-xl font-medium transition-all duration-200 hover:shadow-lg hover:shadow-blue-500/25 cursor-pointer"
           >
             Open Panel
           </button>
-        </>
+        </div>
       ) : (
-        <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-          <p className="text-sm text-gray-500">
-            Open a Bubble.io editor page to start analyzing.
-          </p>
+        <div className="p-5">
+          <div className="p-4 bg-slate-800/50 rounded-xl border border-white/5 text-center">
+            <svg className="w-10 h-10 text-slate-600 mx-auto mb-3" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 9.563C9 9.252 9.252 9 9.563 9h4.874c.311 0 .563.252.563.563v4.874c0 .311-.252.563-.563.563H9.564A.562.562 0 019 14.437V9.564z" />
+            </svg>
+            <p className="text-sm text-slate-400">
+              Open a Bubble.io editor page to start analyzing performance.
+            </p>
+          </div>
         </div>
       )}
 
-      <a
-        href="https://github.com/anthropics/bubbleboost"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="flex items-center justify-center gap-2 text-sm text-gray-500 hover:text-gray-700 transition-colors"
-      >
-        <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
-          <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z" />
-        </svg>
-        View on GitHub
-      </a>
+      {/* Footer */}
+      <div className="px-5 pb-4 pt-1 border-t border-white/5">
+        <button
+          onClick={() => chrome.tabs.create({ url: "https://github.com/ProofOfReach/bubbleboost" })}
+          className="flex items-center justify-center gap-2 text-xs text-slate-500 hover:text-slate-300 transition-colors cursor-pointer w-full"
+        >
+          <svg className="w-3.5 h-3.5" fill="currentColor" viewBox="0 0 24 24">
+            <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.477 2 12c0 4.42 2.87 8.17 6.84 9.5.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.87 1.52 2.34 1.07 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.55-1.11-4.55-4.92 0-1.11.38-2 1.03-2.71-.1-.25-.45-1.29.1-2.64 0 0 .84-.27 2.75 1.02.79-.22 1.65-.33 2.5-.33.85 0 1.71.11 2.5.33 1.91-1.29 2.75-1.02 2.75-1.02.55 1.35.2 2.39.1 2.64.65.71 1.03 1.6 1.03 2.71 0 3.82-2.34 4.66-4.57 4.91.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0012 2z" />
+          </svg>
+          View on GitHub
+        </button>
+      </div>
     </div>
   )
 }
