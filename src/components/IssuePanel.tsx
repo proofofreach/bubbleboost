@@ -1,5 +1,6 @@
 import { useState } from "react"
 import { useStore, type Issue } from "~lib/store"
+import { highlightElement, isHighlightable } from "~lib/highlight"
 
 interface FixInfo {
   steps: string[]
@@ -169,10 +170,32 @@ function IssueItem({ issue }: { issue: Issue }) {
             </div>
           )}
 
-          {issue.elements && issue.elements.length > 0 && (
-            <p className="text-gray-500 text-xs mt-2">
-              {issue.elements.length} element{issue.elements.length !== 1 ? "s" : ""} affected
-            </p>
+          {issue.elements && issue.elements.length > 0 && isHighlightable(issue.checkNumber) && (
+            <div className="mt-3">
+              <p className="text-gray-400 text-xs font-medium mb-1">
+                Affected elements ({issue.elements.length}):
+              </p>
+              <div className="flex flex-wrap gap-1">
+                {issue.elements.slice(0, 10).map((element, i) => (
+                  <button
+                    key={i}
+                    className="px-2 py-1 bg-gray-700 hover:bg-red-600 text-gray-300 hover:text-white text-xs rounded transition-colors"
+                    onClick={(e) => {
+                      e.stopPropagation()
+                      highlightElement(element)
+                    }}
+                    title="Click to scroll to and highlight this element"
+                  >
+                    #{i + 1}
+                  </button>
+                ))}
+                {issue.elements.length > 10 && (
+                  <span className="px-2 py-1 text-gray-500 text-xs">
+                    +{issue.elements.length - 10} more
+                  </span>
+                )}
+              </div>
+            </div>
           )}
         </div>
       )}

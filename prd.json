@@ -127,7 +127,7 @@
       "description": "For checks with element refs (RG nesting, hidden loaded, images, RG cells, group nesting): click issue scrolls to element and adds 3s red outline. Skip for aggregate checks (element count, visible count).",
       "done_criteria": "Clicking highlightable issues scrolls and outlines the element",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-015",
