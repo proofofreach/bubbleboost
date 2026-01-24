@@ -1,9 +1,17 @@
 import { useEffect } from "react"
-import type { PlasmoCSConfig } from "plasmo"
+import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useStore } from "~lib/store"
+import { ScoreBadge } from "~components/ScoreBadge"
+import cssText from "data-text:~style.css"
 
 export const config: PlasmoCSConfig = {
   matches: ["https://*.bubble.io/*"]
+}
+
+export const getStyle: PlasmoGetStyle = () => {
+  const style = document.createElement("style")
+  style.textContent = cssText
+  return style
 }
 
 /**
@@ -56,7 +64,7 @@ function ContentScript() {
     }
   }, [setIsActive])
 
-  return null
+  return <ScoreBadge />
 }
 
 export default ContentScript

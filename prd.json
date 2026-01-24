@@ -37,7 +37,7 @@
       "description": "Bottom-right badge showing 0-100. Green 80+, yellow 50-79, red <50. Draggable. Shows score delta when previousScore exists (e.g., '+12 pts' in green, '-5 pts' in red).",
       "done_criteria": "Badge shows current score and delta from previous analysis",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-005",
