@@ -2,6 +2,7 @@ import { useEffect } from "react"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useStore } from "~lib/store"
 import { ScoreBadge } from "~components/ScoreBadge"
+import { IssuePanel } from "~components/IssuePanel"
 import { runAnalysisWithHistory } from "~lib/scoring"
 import cssText from "data-text:~style.css"
 
@@ -82,7 +83,12 @@ function ContentScript() {
     }
   }, [setIsActive, setScore, setPreviousScore, setIssues])
 
-  return <ScoreBadge />
+  return (
+    <>
+      <ScoreBadge />
+      <IssuePanel />
+    </>
+  )
 }
 
 export default ContentScript
