@@ -1,6 +1,10 @@
 // Export the registry singleton
 export { registry } from "./registry"
 
+// Export the scorer singleton and types
+export { scorer, Scorer, DEFAULT_THRESHOLDS } from "./scorer"
+export type { ThresholdConfig } from "./scorer"
+
 // Export types
 export type { Check, CheckMeta, CheckResult } from "./types"
 
@@ -16,7 +20,7 @@ import "./rgCellElementCount"
 import "./groupNestingDepth"
 
 // Legacy exports for backward compatibility with existing code.
-// These will be deprecated once RF-005 separates scoring from checks.
+// These use the scorer internally and return Issues directly.
 export { checkElementCount } from "./elementCount"
 export { checkRgNestingDepth } from "./rgNestingDepth"
 export { checkVisibleOnLoad } from "./visibleOnLoad"

@@ -1,5 +1,6 @@
 import { registry } from "./registry"
-import type { Check } from "./types"
+import { scorer } from "./scorer"
+import type { Check, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
 
 const CHECK_META = {
@@ -13,9 +14,9 @@ const CHECK_META = {
 /**
  * Check 2: RG nesting depth
  * Detect nested repeating groups via DOM traversal.
- * Warn >1 level, critical >2.
+ * Returns raw depth - scorer determines severity based on thresholds.
  */
-function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[] } | null {
+function runCheck(): CheckResult {
   // Find all repeating groups - Bubble uses class containing "RepeatingGroup"
   const repeatingGroups = document.querySelectorAll(
     '[class*="RepeatingGroup"], [data-element-id*="RepeatingGroup"]'
@@ -49,28 +50,23 @@ function runCheck(): { value: number; severity: Issue["severity"]; elements: Ele
     }
   })
 
-  // No nesting or only 1 level is acceptable
-  if (maxDepth <= 1) {
-    return null
+  const result: CheckResult = {
+    value: maxDepth,
+    message: maxDepth > 0
+      ? `Repeating groups nested ${maxDepth} levels deep`
+      : "No nested repeating groups found",
   }
 
-  // Determine severity
-  const severity: Issue["severity"] = maxDepth > 2 ? "critical" : "warning"
+  if (nestedElements.length > 0) {
+    result.elements = nestedElements
+  }
 
-  return { value: maxDepth, severity, elements: nestedElements }
+  return result
 }
 
 const rgNestingDepthCheck: Check = {
   meta: CHECK_META,
-  run: () => {
-    const result = runCheck()
-    if (result === null) return null
-    return {
-      value: result.value,
-      message: `Repeating groups nested ${result.value} levels deep`,
-      elements: result.elements,
-    }
-  },
+  run: runCheck,
 }
 
 // Self-register with the registry
@@ -81,18 +77,7 @@ registry.register(rgNestingDepthCheck)
  */
 export function checkRgNestingDepth(): Issue | null {
   const result = runCheck()
-  if (result === null) return null
-
-  return {
-    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
-    checkNumber: CHECK_META.checkNumber,
-    title: CHECK_META.name,
-    severity: result.severity,
-    count: result.value,
-    message: `Repeating groups nested ${result.value} levels deep`,
-    benchmark: CHECK_META.benchmark,
-    elements: result.elements,
-  }
+  return scorer.resultToIssue(CHECK_META, result)
 }
 
 export { rgNestingDepthCheck }

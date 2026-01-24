@@ -1,5 +1,6 @@
 import { registry } from "./registry"
-import type { Check } from "./types"
+import { scorer } from "./scorer"
+import type { Check, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
 
 const CHECK_META = {
@@ -13,9 +14,10 @@ const CHECK_META = {
 /**
  * Check 5: Images without dimensions
  * Find img tags without width/height attributes or inline styles.
- * Any = warning. These cause layout shifts (CLS) hurting Core Web Vitals.
+ * Any image without dimensions causes layout shifts (CLS) hurting Core Web Vitals.
+ * Returns raw count - scorer determines severity based on thresholds.
  */
-function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[] } | null {
+function runCheck(): CheckResult {
   const images = document.querySelectorAll("img")
 
   const imagesWithoutDimensions: Element[] = []
@@ -40,25 +42,23 @@ function runCheck(): { value: number; severity: Issue["severity"]; elements: Ele
 
   const count = imagesWithoutDimensions.length
 
-  // No images without dimensions is acceptable
-  if (count === 0) {
-    return null
+  const result: CheckResult = {
+    value: count,
+    message: count > 0
+      ? `${count} image${count === 1 ? "" : "s"} missing width/height`
+      : "All images have explicit dimensions",
   }
 
-  return { value: count, severity: "warning", elements: imagesWithoutDimensions }
+  if (imagesWithoutDimensions.length > 0) {
+    result.elements = imagesWithoutDimensions
+  }
+
+  return result
 }
 
 const imagesWithoutDimensionsCheck: Check = {
   meta: CHECK_META,
-  run: () => {
-    const result = runCheck()
-    if (result === null) return null
-    return {
-      value: result.value,
-      message: `${result.value} image${result.value === 1 ? "" : "s"} missing width/height`,
-      elements: result.elements,
-    }
-  },
+  run: runCheck,
 }
 
 // Self-register with the registry
@@ -69,18 +69,7 @@ registry.register(imagesWithoutDimensionsCheck)
  */
 export function checkImagesWithoutDimensions(): Issue | null {
   const result = runCheck()
-  if (result === null) return null
-
-  return {
-    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
-    checkNumber: CHECK_META.checkNumber,
-    title: CHECK_META.name,
-    severity: result.severity,
-    count: result.value,
-    message: `${result.value} image${result.value === 1 ? "" : "s"} missing width/height`,
-    benchmark: CHECK_META.benchmark,
-    elements: result.elements,
-  }
+  return scorer.resultToIssue(CHECK_META, result)
 }
 
 export { imagesWithoutDimensionsCheck }

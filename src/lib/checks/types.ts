@@ -1,5 +1,3 @@
-import type { Issue } from "~lib/store"
-
 /**
  * Metadata for a check - describes the check without running it.
  */
@@ -18,7 +16,7 @@ export interface CheckMeta {
 
 /**
  * Raw result from a check before scoring is applied.
- * Checks return raw data; a separate module handles severity and scoring.
+ * Checks return raw data; a separate module (scorer.ts) handles severity thresholds.
  */
 export interface CheckResult {
   /** Numeric value measured by the check (count, depth, etc.) */
@@ -31,13 +29,10 @@ export interface CheckResult {
 
 /**
  * A complete check definition: metadata + execution function.
+ * Checks should return raw data without determining severity.
+ * Severity is determined by the Scorer based on configurable thresholds.
  */
 export interface Check {
   meta: CheckMeta
   run: () => CheckResult | null
 }
-
-/**
- * Converts a CheckResult to an Issue by applying severity thresholds.
- */
-export type ThresholdFn = (value: number) => Issue["severity"] | null

@@ -1,3 +1,4 @@
+import { scorer } from "./scorer"
 import type { Check, CheckMeta, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
 
@@ -45,7 +46,7 @@ class CheckRegistry {
 
   /**
    * Run all checks and return results as Issues.
-   * Each check's result is converted to an Issue using its thresholds.
+   * Uses the Scorer to apply severity thresholds to raw check results.
    */
   runAll(): Issue[] {
     const issues: Issue[] = []
@@ -53,7 +54,7 @@ class CheckRegistry {
     for (const check of this.getAll()) {
       const result = check.run()
       if (result !== null) {
-        const issue = this.resultToIssue(check, result)
+        const issue = scorer.resultToIssue(check.meta, result)
         if (issue !== null) {
           issues.push(issue)
         }
@@ -64,28 +65,20 @@ class CheckRegistry {
   }
 
   /**
-   * Convert a CheckResult to an Issue.
-   * The check's result provides raw data; this method applies severity.
+   * Run all checks and return raw results (without scoring).
+   * Useful for debugging or custom scoring logic.
    */
-  private resultToIssue(check: Check, result: CheckResult): Issue | null {
-    // For now, checks determine their own severity in the result.
-    // Future RF-005 will separate scoring logic from checks.
-    const issue: Issue = {
-      id: `check-${check.meta.checkNumber}-${check.meta.id}`,
-      checkNumber: check.meta.checkNumber,
-      title: check.meta.name,
-      severity: "warning", // Default severity - checks override via result
-      count: result.value,
-      message: result.message,
-      benchmark: check.meta.benchmark,
+  runAllRaw(): Array<{ meta: CheckMeta; result: CheckResult }> {
+    const results: Array<{ meta: CheckMeta; result: CheckResult }> = []
+
+    for (const check of this.getAll()) {
+      const result = check.run()
+      if (result !== null) {
+        results.push({ meta: check.meta, result })
+      }
     }
 
-    // Only add elements if they exist (exactOptionalPropertyTypes compliance)
-    if (result.elements !== undefined) {
-      issue.elements = result.elements
-    }
-
-    return issue
+    return results
   }
 
   /**

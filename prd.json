@@ -46,7 +46,7 @@
       "description": "Checks should return raw data (counts, elements). Separate module handles severity thresholds and scoring. Makes thresholds configurable.",
       "done_criteria": "Checks return CheckResult, separate scorer applies thresholds",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "RF-006",

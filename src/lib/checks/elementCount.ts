@@ -1,5 +1,6 @@
 import { registry } from "./registry"
-import type { Check } from "./types"
+import { scorer } from "./scorer"
+import type { Check, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
 
 const CHECK_META = {
@@ -13,9 +14,9 @@ const CHECK_META = {
 /**
  * Check 1: Element count
  * Count DOM elements with [data-element-id] or Bubble class markers.
- * Warn >200, critical >500.
+ * Returns raw count - scorer determines severity based on thresholds.
  */
-function runCheck(): { value: number; severity: Issue["severity"] } | null {
+function runCheck(): CheckResult {
   // Count elements with Bubble markers
   const elementsWithDataId = document.querySelectorAll("[data-element-id]")
   const elementsWithBubbleClass = document.querySelectorAll(
@@ -29,26 +30,15 @@ function runCheck(): { value: number; severity: Issue["severity"] } | null {
 
   const count = allElements.size
 
-  // Determine severity
-  if (count > 500) {
-    return { value: count, severity: "critical" }
-  } else if (count > 200) {
-    return { value: count, severity: "warning" }
+  return {
+    value: count,
+    message: `Found ${count} Bubble elements on the page`,
   }
-
-  return null // No issue
 }
 
 const elementCountCheck: Check = {
   meta: CHECK_META,
-  run: () => {
-    const result = runCheck()
-    if (result === null) return null
-    return {
-      value: result.value,
-      message: `Found ${result.value} Bubble elements on the page`,
-    }
-  },
+  run: runCheck,
 }
 
 // Self-register with the registry
@@ -60,17 +50,7 @@ registry.register(elementCountCheck)
  */
 export function checkElementCount(): Issue | null {
   const result = runCheck()
-  if (result === null) return null
-
-  return {
-    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
-    checkNumber: CHECK_META.checkNumber,
-    title: CHECK_META.name,
-    severity: result.severity,
-    count: result.value,
-    message: `Found ${result.value} Bubble elements on the page`,
-    benchmark: CHECK_META.benchmark,
-  }
+  return scorer.resultToIssue(CHECK_META, result)
 }
 
 export { elementCountCheck }

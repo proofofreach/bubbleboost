@@ -1,5 +1,6 @@
 import { registry } from "./registry"
-import type { Check } from "./types"
+import { scorer } from "./scorer"
+import type { Check, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
 
 const CHECK_META = {
@@ -13,9 +14,9 @@ const CHECK_META = {
 /**
  * Check 6: RG cell element count
  * Count elements inside each RG cell.
- * Warn if any cell has >5 elements.
+ * Returns raw count - scorer determines severity based on thresholds.
  */
-function runCheck(): { value: number; severity: Issue["severity"]; elements: Element[]; bloatedCount: number } | null {
+function runCheck(): CheckResult & { bloatedCount: number } {
   // Find all repeating groups
   const repeatingGroups = document.querySelectorAll(
     '[class*="RepeatingGroup"], [data-element-id*="RepeatingGroup"]'
@@ -51,24 +52,35 @@ function runCheck(): { value: number; severity: Issue["severity"]; elements: Ele
     })
   })
 
-  // No RGs or all cells have acceptable element counts
-  if (maxPerCell <= 5) {
-    return null
+  const result: CheckResult & { bloatedCount: number } = {
+    value: maxPerCell,
+    message: maxPerCell > 5
+      ? `RG cells have up to ${maxPerCell} elements (${bloatedCells.length} bloated ${bloatedCells.length === 1 ? "cell" : "cells"})`
+      : maxPerCell > 0
+        ? `RG cells have up to ${maxPerCell} elements`
+        : "No repeating groups found",
+    bloatedCount: bloatedCells.length,
   }
 
-  return { value: maxPerCell, severity: "warning", elements: bloatedCells, bloatedCount: bloatedCells.length }
+  if (bloatedCells.length > 0) {
+    result.elements = bloatedCells
+  }
+
+  return result
 }
 
 const rgCellElementCountCheck: Check = {
   meta: CHECK_META,
   run: () => {
     const result = runCheck()
-    if (result === null) return null
-    return {
+    const checkResult: CheckResult = {
       value: result.value,
-      message: `RG cells have up to ${result.value} elements (${result.bloatedCount} bloated ${result.bloatedCount === 1 ? "cell" : "cells"})`,
-      elements: result.elements,
+      message: result.message,
     }
+    if (result.elements !== undefined) {
+      checkResult.elements = result.elements
+    }
+    return checkResult
   },
 }
 
@@ -80,18 +92,7 @@ registry.register(rgCellElementCountCheck)
  */
 export function checkRgCellElementCount(): Issue | null {
   const result = runCheck()
-  if (result === null) return null
-
-  return {
-    id: `check-${CHECK_META.checkNumber}-${CHECK_META.id}`,
-    checkNumber: CHECK_META.checkNumber,
-    title: CHECK_META.name,
-    severity: result.severity,
-    count: result.value,
-    message: `RG cells have up to ${result.value} elements (${result.bloatedCount} bloated ${result.bloatedCount === 1 ? "cell" : "cells"})`,
-    benchmark: CHECK_META.benchmark,
-    elements: result.elements,
-  }
+  return scorer.resultToIssue(CHECK_META, result)
 }
 
 export { rgCellElementCountCheck }
