@@ -28,7 +28,7 @@
       "description": "Content script activates on *.bubble.io/page*, /version-*, /edit* URLs",
       "done_criteria": "isActive=true on editor, false elsewhere",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-004",
