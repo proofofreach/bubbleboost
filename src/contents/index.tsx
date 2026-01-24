@@ -1,10 +1,12 @@
-import { useEffect } from "react"
+import { useEffect, useRef, useCallback } from "react"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 import { useStore } from "~lib/store"
 import { ScoreBadge } from "~components/ScoreBadge"
 import { IssuePanel } from "~components/IssuePanel"
 import { runAnalysisWithHistory } from "~lib/scoring"
 import cssText from "data-text:~style.css"
+
+const DEBOUNCE_MS = 2000
 
 export const config: PlasmoCSConfig = {
   matches: ["https://*.bubble.io/*"]
@@ -35,17 +37,96 @@ function ContentScript() {
   const setPreviousScore = useStore((state) => state.setPreviousScore)
   const setIssues = useStore((state) => state.setIssues)
 
+  // Refs for debounce timer and MutationObserver
+  const debounceTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const observerRef = useRef<MutationObserver | null>(null)
+  const lastAnalysisHashRef = useRef<string>("")
+
   // Helper to get current state without subscribing to changes
   const getState = () => useStore.getState()
 
-  // Run analysis once on mount and on URL changes
+  // Generate a simple hash of DOM state for cache comparison
+  const getDomHash = useCallback((): string => {
+    const elements = document.querySelectorAll("[data-element-id]")
+    const count = elements.length
+    // Include a rough structure fingerprint
+    const sample = Array.from(elements)
+      .slice(0, 50)
+      .map((el) => el.tagName + (el.className || "").slice(0, 20))
+      .join("|")
+    return `${count}:${sample}`
+  }, [])
+
+  // Debounced analysis function
+  const runDebouncedAnalysis = useCallback(() => {
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+    }
+
+    debounceTimerRef.current = setTimeout(() => {
+      // Check cache - skip if DOM hasn't meaningfully changed
+      const currentHash = getDomHash()
+      if (currentHash === lastAnalysisHashRef.current) {
+        return
+      }
+      lastAnalysisHashRef.current = currentHash
+
+      runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+    }, DEBOUNCE_MS)
+  }, [getDomHash, setScore, setPreviousScore, setIssues])
+
+  // Run analysis immediately (for initial load and URL changes)
+  const runImmediateAnalysis = useCallback(() => {
+    // Clear any pending debounced analysis
+    if (debounceTimerRef.current) {
+      clearTimeout(debounceTimerRef.current)
+      debounceTimerRef.current = null
+    }
+
+    const currentHash = getDomHash()
+    lastAnalysisHashRef.current = currentHash
+
+    runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+  }, [getDomHash, setScore, setPreviousScore, setIssues])
+
+  // Setup MutationObserver for DOM changes
   useEffect(() => {
     const isEditor = isBubbleEditorPage()
     setIsActive(isEditor)
 
     // Run initial analysis if on editor page
     if (isEditor) {
-      runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+      runImmediateAnalysis()
+
+      // Setup MutationObserver to watch for DOM changes
+      observerRef.current = new MutationObserver((mutations) => {
+        // Filter out style-only changes and our own highlight overlays
+        const hasRelevantChanges = mutations.some((mutation) => {
+          // Skip attribute changes that are just style updates
+          if (mutation.type === "attributes" && mutation.attributeName === "style") {
+            return false
+          }
+          // Skip changes to our own extension elements
+          if (mutation.target instanceof Element) {
+            const target = mutation.target as Element
+            if (target.closest("[data-plasmo-csui]")) {
+              return false
+            }
+          }
+          return true
+        })
+
+        if (hasRelevantChanges) {
+          runDebouncedAnalysis()
+        }
+      })
+
+      observerRef.current.observe(document.body, {
+        childList: true,
+        subtree: true,
+        attributes: true,
+        attributeFilter: ["data-element-id", "data-source", "class"],
+      })
     }
 
     // Re-check on URL changes (for SPA navigation)
@@ -53,9 +134,45 @@ function ContentScript() {
       const newIsEditor = isBubbleEditorPage()
       setIsActive(newIsEditor)
 
-      // Run analysis when navigating to editor page
       if (newIsEditor) {
-        runAnalysisWithHistory(getState, setScore, setPreviousScore, setIssues)
+        // Reset cache on URL change
+        lastAnalysisHashRef.current = ""
+        runImmediateAnalysis()
+
+        // Setup observer if not already running
+        if (!observerRef.current) {
+          observerRef.current = new MutationObserver((mutations) => {
+            const hasRelevantChanges = mutations.some((mutation) => {
+              if (mutation.type === "attributes" && mutation.attributeName === "style") {
+                return false
+              }
+              if (mutation.target instanceof Element) {
+                const target = mutation.target as Element
+                if (target.closest("[data-plasmo-csui]")) {
+                  return false
+                }
+              }
+              return true
+            })
+
+            if (hasRelevantChanges) {
+              runDebouncedAnalysis()
+            }
+          })
+
+          observerRef.current.observe(document.body, {
+            childList: true,
+            subtree: true,
+            attributes: true,
+            attributeFilter: ["data-element-id", "data-source", "class"],
+          })
+        }
+      } else {
+        // Disconnect observer when leaving editor
+        if (observerRef.current) {
+          observerRef.current.disconnect()
+          observerRef.current = null
+        }
       }
     }
 
@@ -80,8 +197,20 @@ function ContentScript() {
       window.removeEventListener("popstate", handleUrlChange)
       history.pushState = originalPushState
       history.replaceState = originalReplaceState
+
+      // Cleanup observer
+      if (observerRef.current) {
+        observerRef.current.disconnect()
+        observerRef.current = null
+      }
+
+      // Clear debounce timer
+      if (debounceTimerRef.current) {
+        clearTimeout(debounceTimerRef.current)
+        debounceTimerRef.current = null
+      }
     }
-  }, [setIsActive, setScore, setPreviousScore, setIssues])
+  }, [setIsActive, runImmediateAnalysis, runDebouncedAnalysis])
 
   return (
     <>

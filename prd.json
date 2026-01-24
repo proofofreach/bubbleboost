@@ -136,7 +136,7 @@
       "description": "Run analysis on page load and DOM changes. Debounce 2s. Cache results. Update previousScore before new analysis.",
       "done_criteria": "Score updates within 3s of changes, delta shown",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-016",
