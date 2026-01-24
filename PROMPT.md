@@ -22,17 +22,26 @@ pnpm run build
 Free Chrome extension for Bubble.io performance analysis:
 - Plasmo + TypeScript + React + Tailwind
 - 7 DOM-based checks with actionable fixes
+- Score tracking with delta display
+- Element highlighting on issue click
+- Benchmark comparisons
 - No backend, no AI, no monetization
 
 ## The 7 Checks
 
 1. Element count (>200 warn, >500 critical)
-2. RG nesting depth (>1 warn, >2 critical)
+2. RG nesting depth (>1 warn, >2 critical) - highlightable
 3. Visible elements on load (>50 warn)
-4. Hidden but loaded (>20 warn)
-5. Images without dimensions (any = warn)
-6. RG cell element count (>5 = warn)
-7. Group nesting depth (>5 warn)
+4. Hidden but loaded (>20 warn) - highlightable
+5. Images without dimensions (any = warn) - highlightable
+6. RG cell element count (>5 = warn) - highlightable
+7. Group nesting depth (>5 warn) - highlightable
+
+## Key Features
+
+- **Score delta**: Show "+12 pts" or "-5 pts" vs previous analysis
+- **Benchmarks**: "3x above recommended" context on each issue
+- **Highlighting**: Click issue → scroll to element, 3s red outline
 
 ## What NOT to Build
 

@@ -1,7 +1,7 @@
 {
   "project": "BubbleBoost",
   "branchName": "ralph/bubbleboost-mvp",
-  "description": "Free DOM-based performance analyzer for Bubble.io. 7 checks with clear, actionable fixes. No backend, no AI.",
+  "description": "Free DOM-based performance analyzer for Bubble.io. 7 checks with clear, actionable fixes. Score tracking, element highlighting, benchmarks.",
   "userStories": [
     {
       "id": "US-001",
@@ -16,8 +16,8 @@
       "id": "US-002",
       "category": "state",
       "title": "Add Zustand store with chrome.storage",
-      "description": "Store: score, issues array, isActive, panelOpen. Persist to chrome.storage.local",
-      "done_criteria": "State persists across extension reloads",
+      "description": "Store: score, previousScore, issues array, isActive, panelOpen. Persist to chrome.storage.local",
+      "done_criteria": "State persists across extension reloads, previousScore tracks last analysis",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -33,9 +33,9 @@
     {
       "id": "US-004",
       "category": "ui",
-      "title": "Create floating score badge",
-      "description": "Bottom-right badge showing 0-100. Green 80+, yellow 50-79, red <50. Draggable, position persists. Click opens panel.",
-      "done_criteria": "Badge visible, draggable, color-coded, clickable",
+      "title": "Create floating score badge with delta",
+      "description": "Bottom-right badge showing 0-100. Green 80+, yellow 50-79, red <50. Draggable. Shows score delta when previousScore exists (e.g., '+12 pts' in green, '-5 pts' in red).",
+      "done_criteria": "Badge shows current score and delta from previous analysis",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -43,8 +43,8 @@
       "id": "US-005",
       "category": "analysis",
       "title": "Implement Check 1: Element count",
-      "description": "Count DOM elements with [data-element-id] or Bubble class markers. Warn >200, critical >500.",
-      "done_criteria": "Returns status, count, message",
+      "description": "Count DOM elements with [data-element-id] or Bubble class markers. Warn >200, critical >500. Store element refs for aggregate display.",
+      "done_criteria": "Returns status, count, message, benchmark text ('Best practice: under 100')",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -52,8 +52,8 @@
       "id": "US-006",
       "category": "analysis",
       "title": "Implement Check 2: RG nesting depth",
-      "description": "Detect nested repeating groups via DOM traversal. Warn >1 level, critical >2 levels.",
-      "done_criteria": "Returns status, max depth found, message",
+      "description": "Detect nested repeating groups via DOM traversal. Warn >1 level, critical >2. Store refs to nested RG elements for highlighting.",
+      "done_criteria": "Returns status, max depth, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -62,7 +62,7 @@
       "category": "analysis",
       "title": "Implement Check 3: Visible elements on load",
       "description": "Count elements not hidden via display:none or visibility:hidden. Warn >50, critical >100.",
-      "done_criteria": "Returns status, count, message",
+      "done_criteria": "Returns status, count, benchmark text ('Best practice: under 50')",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -70,8 +70,8 @@
       "id": "US-008",
       "category": "analysis",
       "title": "Implement Check 4: Hidden but loaded",
-      "description": "Count elements with display:none that have data-source attributes. Warn >20.",
-      "done_criteria": "Returns status, count, message",
+      "description": "Count elements with display:none that have data-source attributes. Warn >20. Store refs for highlighting.",
+      "done_criteria": "Returns status, count, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -79,8 +79,8 @@
       "id": "US-009",
       "category": "analysis",
       "title": "Implement Check 5: Images without dimensions",
-      "description": "Find img tags without width/height attributes or inline styles. Any = warning.",
-      "done_criteria": "Returns status, count, list of elements",
+      "description": "Find img tags without width/height attributes or inline styles. Any = warning. Store img refs for highlighting.",
+      "done_criteria": "Returns status, count, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -88,8 +88,8 @@
       "id": "US-010",
       "category": "analysis",
       "title": "Implement Check 6: RG cell element count",
-      "description": "Count elements inside each RG cell. Warn if any cell has >5 elements (multiplicative effect).",
-      "done_criteria": "Returns status, max elements per cell, message",
+      "description": "Count elements inside each RG cell. Warn if any cell >5 elements. Store refs to bloated cells for highlighting.",
+      "done_criteria": "Returns status, max per cell, elements array for highlighting, benchmark text",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
@@ -97,49 +97,58 @@
       "id": "US-011",
       "category": "analysis",
       "title": "Implement Check 7: Group nesting depth",
-      "description": "Measure deepest group-in-group nesting. Warn >5 levels, critical >8.",
-      "done_criteria": "Returns status, max depth, message",
+      "description": "Measure deepest group-in-group nesting. Warn >5, critical >8. Store deepest chain for highlighting.",
+      "done_criteria": "Returns status, max depth, elements array for deepest chain",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
     {
       "id": "US-012",
       "category": "scoring",
-      "title": "Create score calculation engine",
-      "description": "Score 0-100. Critical=-15pts, Warning=-5pts. Deterministic.",
-      "done_criteria": "Same page state = same score every time",
+      "title": "Create score calculation with history",
+      "description": "Score 0-100. Critical=-15pts, Warning=-5pts. Before saving new score, store current as previousScore. Deterministic.",
+      "done_criteria": "Same page = same score. previousScore updates on each analysis.",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
     {
       "id": "US-013",
       "category": "ui",
-      "title": "Create issue panel with fixes",
-      "description": "Panel shows issues grouped by severity. Each issue expands to show fix template with steps and docs link.",
-      "done_criteria": "All 7 checks have actionable fix content",
+      "title": "Create issue panel with fixes and benchmarks",
+      "description": "Panel shows issues grouped by severity. Each issue shows: title, count, benchmark comparison ('3x above recommended'), fix steps, docs link. Expandable.",
+      "done_criteria": "All 7 checks show benchmark context and actionable fixes",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
     {
       "id": "US-014",
-      "category": "analysis",
-      "title": "Add auto-analysis with MutationObserver",
-      "description": "Run analysis on page load and DOM changes. Debounce 2s. Cache results.",
-      "done_criteria": "Score updates within 3s of changes",
+      "category": "ui",
+      "title": "Add element highlighting on issue click",
+      "description": "For checks with element refs (RG nesting, hidden loaded, images, RG cells, group nesting): click issue scrolls to element and adds 3s red outline. Skip for aggregate checks (element count, visible count).",
+      "done_criteria": "Clicking highlightable issues scrolls and outlines the element",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
     {
       "id": "US-015",
-      "category": "ui",
-      "title": "Add extension popup",
-      "description": "Popup shows score, status, issue summary, Open Panel button, GitHub link",
-      "done_criteria": "Popup displays correct state",
+      "category": "analysis",
+      "title": "Add auto-analysis with MutationObserver",
+      "description": "Run analysis on page load and DOM changes. Debounce 2s. Cache results. Update previousScore before new analysis.",
+      "done_criteria": "Score updates within 3s of changes, delta shown",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": false
     },
     {
       "id": "US-016",
+      "category": "ui",
+      "title": "Add extension popup",
+      "description": "Popup shows: score with delta, status, issue summary by severity, Open Panel button, GitHub link",
+      "done_criteria": "Popup displays score, delta, and issue counts",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "US-017",
       "category": "ui",
       "title": "Add badge icon state",
       "description": "Badge shows score number, color matches score, gray when inactive",
@@ -148,10 +157,10 @@
       "passes": false
     },
     {
-      "id": "US-017",
+      "id": "US-018",
       "category": "release",
       "title": "Final build and README",
-      "description": "All quality gates pass. README documents 7 checks and installation.",
+      "description": "All quality gates pass. README documents 7 checks, highlighting, score tracking, and installation.",
       "done_criteria": "pnpm run build produces .zip, extension loads clean",
       "validation_steps": ["pnpm run lint", "pnpm run type-check", "pnpm run build"],
       "passes": false
