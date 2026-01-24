@@ -1,16 +1,7 @@
 import logoUrl from "data-base64:../assets/logo.png"
 import { useEffect, useState } from "react"
+import type { Issue } from "~lib/store"
 import "./style.css"
-
-interface Issue {
-  id: string
-  checkNumber: number
-  title: string
-  severity: 'critical' | 'warning' | 'info'
-  count: number
-  message: string
-  benchmark: string
-}
 
 interface StoredState {
   score: number

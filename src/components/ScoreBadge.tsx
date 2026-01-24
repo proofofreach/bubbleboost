@@ -83,7 +83,7 @@ export function ScoreBadge() {
       onMouseDown={handleMouseDown}
       onClick={() => {
         if (!isDragging) {
-          setPanelOpen(!panelOpen)
+          setPanelOpen(!panelOpen, "badge")
         }
       }}
     >

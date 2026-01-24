@@ -7,6 +7,8 @@ import {
   checkRgCellElementCount,
   checkGroupNestingDepth,
 } from "./checks"
+import { eventBus } from "./eventBus"
+import { createEvent } from "./events"
 import type { Issue } from "./store"
 
 const STARTING_SCORE = 100
@@ -76,6 +78,8 @@ export function runAnalysis(): { issues: Issue[]; score: number } {
  * Before saving new score, stores current score as previousScore.
  * This ensures the score delta can be displayed.
  *
+ * Dispatches AnalysisStarted and AnalysisComplete events.
+ *
  * @param getState - Function to get current store state
  * @param setScore - Function to update score in store
  * @param setPreviousScore - Function to update previousScore in store
@@ -87,18 +91,31 @@ export function runAnalysisWithHistory(
   setPreviousScore: (score: number | null) => void,
   setIssues: (issues: Issue[]) => void
 ): { issues: Issue[]; score: number } {
-  // Get current score from store at execution time
-  const currentScore = getState().score
+  // Dispatch analysis started event
+  eventBus.dispatch(createEvent.analysisStarted())
 
-  // Store current score as previous before running new analysis
-  setPreviousScore(currentScore)
+  try {
+    // Get current score from store at execution time
+    const currentScore = getState().score
 
-  // Run the analysis
-  const { issues, score } = runAnalysis()
+    // Store current score as previous before running new analysis
+    setPreviousScore(currentScore)
 
-  // Update store with new results
-  setIssues(issues)
-  setScore(score)
+    // Run the analysis
+    const { issues, score } = runAnalysis()
 
-  return { issues, score }
+    // Update store with new results
+    setIssues(issues)
+    setScore(score)
+
+    // Dispatch analysis complete event
+    eventBus.dispatch(createEvent.analysisComplete(score, currentScore, issues))
+
+    return { issues, score }
+  } catch (error) {
+    // Dispatch analysis error event
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    eventBus.dispatch(createEvent.analysisError(errorMessage))
+    throw error
+  }
 }

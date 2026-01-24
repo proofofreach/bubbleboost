@@ -1,5 +1,7 @@
 import { create } from 'zustand'
 import { persist, createJSONStorage, type StateStorage } from 'zustand/middleware'
+import { eventBus } from './eventBus'
+import { createEvent } from './events'
 
 export interface Issue {
   id: string
@@ -22,7 +24,7 @@ export interface BubbleBoostState {
   setPreviousScore: (score: number | null) => void
   setIssues: (issues: Issue[]) => void
   setIsActive: (isActive: boolean) => void
-  setPanelOpen: (panelOpen: boolean) => void
+  setPanelOpen: (panelOpen: boolean, source?: 'badge' | 'panel' | 'popup' | 'external') => void
   reset: () => void
 }
 
@@ -51,14 +53,31 @@ const initialState = {
 
 export const useStore = create<BubbleBoostState>()(
   persist(
-    (set) => ({
+    (set, get) => ({
       ...initialState,
-      setScore: (score) => set({ score }),
-      setPreviousScore: (previousScore) => set({ previousScore }),
-      setIssues: (issues) => set({ issues }),
-      setIsActive: (isActive) => set({ isActive }),
-      setPanelOpen: (panelOpen) => set({ panelOpen }),
-      reset: () => set(initialState),
+      setScore: (score) => {
+        const previousScore = get().previousScore
+        set({ score })
+        eventBus.dispatch(createEvent.scoreUpdated(score, previousScore))
+      },
+      setPreviousScore: (previousScore) => {
+        set({ previousScore })
+      },
+      setIssues: (issues) => {
+        set({ issues })
+      },
+      setIsActive: (isActive) => {
+        set({ isActive })
+        eventBus.dispatch(createEvent.editorPageDetected(isActive, window.location.href))
+      },
+      setPanelOpen: (panelOpen, source = 'badge') => {
+        set({ panelOpen })
+        eventBus.dispatch(createEvent.panelToggled(panelOpen, source))
+      },
+      reset: () => {
+        set(initialState)
+        eventBus.dispatch(createEvent.stateReset())
+      },
     }),
     {
       name: 'bubbleboost-storage',
@@ -85,7 +104,7 @@ if (typeof chrome !== 'undefined' && chrome.storage?.local?.onChanged) {
           const parsed = JSON.parse(newValue)
           if (parsed.state && parsed.state.panelOpen !== undefined) {
             const { setPanelOpen } = useStore.getState()
-            setPanelOpen(parsed.state.panelOpen)
+            setPanelOpen(parsed.state.panelOpen, 'external')
           }
         }
       } catch (e) {

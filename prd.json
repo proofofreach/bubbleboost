@@ -37,7 +37,7 @@
       "description": "Replace direct store mutations with typed events: AnalysisStarted, AnalysisComplete, IssueHighlighted, etc. Add event logging for debugging.",
       "done_criteria": "All state changes go through event dispatch, events are typed",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "RF-005",
