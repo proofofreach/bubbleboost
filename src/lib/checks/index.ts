@@ -1,5 +1,6 @@
-// Export the registry singleton
+// Export the registry singleton and cache types
 export { registry } from "./registry"
+export type { CacheStats } from "./registry"
 
 // Export the scorer singleton and types
 export { scorer, Scorer, DEFAULT_THRESHOLDS } from "./scorer"

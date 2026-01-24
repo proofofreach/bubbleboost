@@ -55,7 +55,7 @@
       "description": "Cache check results by DOM hash. Only re-run checks when relevant DOM subtree changes. Track cache hit rate.",
       "done_criteria": "Repeated analysis on unchanged DOM uses cache, logs hit rate",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "RF-007",
