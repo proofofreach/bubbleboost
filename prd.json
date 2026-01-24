@@ -91,7 +91,7 @@
       "description": "Count elements inside each RG cell. Warn if any cell >5 elements. Store refs to bloated cells for highlighting.",
       "done_criteria": "Returns status, max per cell, elements array for highlighting, benchmark text",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-011",
