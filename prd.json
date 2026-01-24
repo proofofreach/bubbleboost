@@ -46,7 +46,7 @@
       "description": "Count DOM elements with [data-element-id] or Bubble class markers. Warn >200, critical >500. Store element refs for aggregate display.",
       "done_criteria": "Returns status, count, message, benchmark text ('Best practice: under 100')",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-006",
