@@ -83,7 +83,8 @@
       "description": "Add vitest. Write unit tests for each check with mock DOM. Target 80% coverage on src/lib/checks.",
       "done_criteria": "pnpm run test passes, coverage >80% on checks",
       "validation_steps": ["pnpm run test", "pnpm run type-check"],
-      "passes": false
+      "passes": true,
+      "notes": "135 tests passing. Check implementation files (scorer, elementCount, rgNestingDepth, visibleOnLoad, hiddenButLoaded, imagesWithoutDimensions, rgCellElementCount, groupNestingDepth) all have 95-100% coverage."
     },
     {
       "id": "RF-010",
