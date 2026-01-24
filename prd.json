@@ -19,7 +19,7 @@
       "description": "Store: score, previousScore, issues array, isActive, panelOpen. Persist to chrome.storage.local",
       "done_criteria": "State persists across extension reloads, previousScore tracks last analysis",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-003",
