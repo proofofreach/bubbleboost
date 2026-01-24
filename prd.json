@@ -100,7 +100,7 @@
       "description": "Measure deepest group-in-group nesting. Warn >5, critical >8. Store deepest chain for highlighting.",
       "done_criteria": "Returns status, max depth, elements array for deepest chain",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-012",
