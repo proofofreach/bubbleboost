@@ -163,7 +163,7 @@
       "description": "All quality gates pass. README documents 7 checks, highlighting, score tracking, and installation.",
       "done_criteria": "pnpm run build produces .zip, extension loads clean",
       "validation_steps": ["pnpm run lint", "pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     }
   ]
 }
