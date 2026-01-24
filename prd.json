@@ -145,7 +145,7 @@
       "description": "Popup shows: score with delta, status, issue summary by severity, Open Panel button, GitHub link",
       "done_criteria": "Popup displays score, delta, and issue counts",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-017",
