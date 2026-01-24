@@ -82,7 +82,7 @@
       "description": "Find img tags without width/height attributes or inline styles. Any = warning. Store img refs for highlighting.",
       "done_criteria": "Returns status, count, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-010",
