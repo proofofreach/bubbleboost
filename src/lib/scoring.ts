@@ -1,4 +1,3 @@
-import type { Issue } from "./store"
 import {
   checkElementCount,
   checkRgNestingDepth,
@@ -8,6 +7,7 @@ import {
   checkRgCellElementCount,
   checkGroupNestingDepth,
 } from "./checks"
+import type { Issue } from "./store"
 
 const STARTING_SCORE = 100
 const CRITICAL_PENALTY = 15

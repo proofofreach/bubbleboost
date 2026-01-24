@@ -1,6 +1,6 @@
 import { useState } from "react"
-import { useStore, type Issue } from "~lib/store"
 import { highlightElement, isHighlightable } from "~lib/highlight"
+import { useStore, type Issue } from "~lib/store"
 
 interface FixInfo {
   steps: string[]

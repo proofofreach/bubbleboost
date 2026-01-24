@@ -1,169 +1,97 @@
 {
-  "project": "BubbleBoost",
-  "branchName": "ralph/bubbleboost-mvp",
-  "description": "Free DOM-based performance analyzer for Bubble.io. 7 checks with clear, actionable fixes. Score tracking, element highlighting, benchmarks.",
+  "project": "BubbleBoost Refactor",
+  "branchName": "ralph/refactor",
+  "description": "Code quality, architecture, and performance refactor for BubbleBoost Chrome extension",
   "userStories": [
     {
-      "id": "US-001",
-      "category": "setup",
-      "title": "Initialize Plasmo extension project",
-      "description": "Set up Plasmo with TypeScript, React, Tailwind CSS, Manifest V3",
-      "done_criteria": "Extension builds and loads in Chrome without errors",
-      "validation_steps": ["pnpm run build", "pnpm run type-check"],
-      "passes": true
-    },
-    {
-      "id": "US-002",
-      "category": "state",
-      "title": "Add Zustand store with chrome.storage",
-      "description": "Store: score, previousScore, issues array, isActive, panelOpen. Persist to chrome.storage.local",
-      "done_criteria": "State persists across extension reloads, previousScore tracks last analysis",
+      "id": "RF-001",
+      "category": "quality",
+      "title": "Add strict TypeScript config",
+      "description": "Enable strict mode, noUncheckedIndexedAccess, exactOptionalPropertyTypes. Fix all resulting type errors.",
+      "done_criteria": "tsconfig.json has strict settings, pnpm run type-check passes",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
       "passes": true
     },
     {
-      "id": "US-003",
-      "category": "detection",
-      "title": "Detect Bubble editor pages",
-      "description": "Content script activates on *.bubble.io/page*, /version-*, /edit* URLs",
-      "done_criteria": "isActive=true on editor, false elsewhere",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "id": "RF-002",
+      "category": "quality",
+      "title": "Add ESLint with strict rules",
+      "description": "Add ESLint with @typescript-eslint, react-hooks, import-order rules. Fix all lint errors.",
+      "done_criteria": "pnpm run lint passes with zero warnings",
+      "validation_steps": ["pnpm run lint", "pnpm run type-check"],
       "passes": true
     },
     {
-      "id": "US-004",
-      "category": "ui",
-      "title": "Create floating score badge with delta",
-      "description": "Bottom-right badge showing 0-100. Green 80+, yellow 50-79, red <50. Draggable. Shows score delta when previousScore exists (e.g., '+12 pts' in green, '-5 pts' in red).",
-      "done_criteria": "Badge shows current score and delta from previous analysis",
+      "id": "RF-003",
+      "category": "architecture",
+      "title": "Extract check registry pattern",
+      "description": "Create CheckRegistry class that auto-discovers checks. Each check exports metadata (id, name, highlightable, benchmark). Remove manual wiring.",
+      "done_criteria": "Adding a new check requires only creating the file, no index.ts changes",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "US-005",
-      "category": "analysis",
-      "title": "Implement Check 1: Element count",
-      "description": "Count DOM elements with [data-element-id] or Bubble class markers. Warn >200, critical >500. Store element refs for aggregate display.",
-      "done_criteria": "Returns status, count, message, benchmark text ('Best practice: under 100')",
+      "id": "RF-004",
+      "category": "architecture",
+      "title": "Create typed event system",
+      "description": "Replace direct store mutations with typed events: AnalysisStarted, AnalysisComplete, IssueHighlighted, etc. Add event logging for debugging.",
+      "done_criteria": "All state changes go through event dispatch, events are typed",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "US-006",
-      "category": "analysis",
-      "title": "Implement Check 2: RG nesting depth",
-      "description": "Detect nested repeating groups via DOM traversal. Warn >1 level, critical >2. Store refs to nested RG elements for highlighting.",
-      "done_criteria": "Returns status, max depth, elements array for highlighting",
+      "id": "RF-005",
+      "category": "architecture",
+      "title": "Separate DOM queries from scoring logic",
+      "description": "Checks should return raw data (counts, elements). Separate module handles severity thresholds and scoring. Makes thresholds configurable.",
+      "done_criteria": "Checks return CheckResult, separate scorer applies thresholds",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "US-007",
-      "category": "analysis",
-      "title": "Implement Check 3: Visible elements on load",
-      "description": "Count elements not hidden via display:none or visibility:hidden. Warn >50, critical >100.",
-      "done_criteria": "Returns status, count, benchmark text ('Best practice: under 50')",
+      "id": "RF-006",
+      "category": "performance",
+      "title": "Add check result caching with invalidation",
+      "description": "Cache check results by DOM hash. Only re-run checks when relevant DOM subtree changes. Track cache hit rate.",
+      "done_criteria": "Repeated analysis on unchanged DOM uses cache, logs hit rate",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "US-008",
-      "category": "analysis",
-      "title": "Implement Check 4: Hidden but loaded",
-      "description": "Count elements with display:none that have data-source attributes. Warn >20. Store refs for highlighting.",
-      "done_criteria": "Returns status, count, elements array for highlighting",
+      "id": "RF-007",
+      "category": "performance",
+      "title": "Batch DOM reads with requestIdleCallback",
+      "description": "Collect all DOM queries, batch execute during idle time. Avoid layout thrashing. Add performance marks.",
+      "done_criteria": "Analysis doesn't block main thread, uses requestIdleCallback",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "passes": false
     },
     {
-      "id": "US-009",
-      "category": "analysis",
-      "title": "Implement Check 5: Images without dimensions",
-      "description": "Find img tags without width/height attributes or inline styles. Any = warning. Store img refs for highlighting.",
-      "done_criteria": "Returns status, count, elements array for highlighting",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "id": "RF-008",
+      "category": "performance",
+      "title": "Tree-shake unused code and lazy load panel",
+      "description": "Analyze bundle, remove dead code. Lazy load IssuePanel only when opened. Target <50KB content script.",
+      "done_criteria": "Content script bundle <50KB, panel loads on demand",
+      "validation_steps": ["pnpm run build", "check bundle size"],
+      "passes": false
     },
     {
-      "id": "US-010",
-      "category": "analysis",
-      "title": "Implement Check 6: RG cell element count",
-      "description": "Count elements inside each RG cell. Warn if any cell >5 elements. Store refs to bloated cells for highlighting.",
-      "done_criteria": "Returns status, max per cell, elements array for highlighting, benchmark text",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "id": "RF-009",
+      "category": "quality",
+      "title": "Add unit tests for checks",
+      "description": "Add vitest. Write unit tests for each check with mock DOM. Target 80% coverage on src/lib/checks.",
+      "done_criteria": "pnpm run test passes, coverage >80% on checks",
+      "validation_steps": ["pnpm run test", "pnpm run type-check"],
+      "passes": false
     },
     {
-      "id": "US-011",
-      "category": "analysis",
-      "title": "Implement Check 7: Group nesting depth",
-      "description": "Measure deepest group-in-group nesting. Warn >5, critical >8. Store deepest chain for highlighting.",
-      "done_criteria": "Returns status, max depth, elements array for deepest chain",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-012",
-      "category": "scoring",
-      "title": "Create score calculation with history",
-      "description": "Score 0-100. Critical=-15pts, Warning=-5pts. Before saving new score, store current as previousScore. Deterministic.",
-      "done_criteria": "Same page = same score. previousScore updates on each analysis.",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-013",
-      "category": "ui",
-      "title": "Create issue panel with fixes and benchmarks",
-      "description": "Panel shows issues grouped by severity. Each issue shows: title, count, benchmark comparison ('3x above recommended'), fix steps, docs link. Expandable.",
-      "done_criteria": "All 7 checks show benchmark context and actionable fixes",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-014",
-      "category": "ui",
-      "title": "Add element highlighting on issue click",
-      "description": "For checks with element refs (RG nesting, hidden loaded, images, RG cells, group nesting): click issue scrolls to element and adds 3s red outline. Skip for aggregate checks (element count, visible count).",
-      "done_criteria": "Clicking highlightable issues scrolls and outlines the element",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-015",
-      "category": "analysis",
-      "title": "Add auto-analysis with MutationObserver",
-      "description": "Run analysis on page load and DOM changes. Debounce 2s. Cache results. Update previousScore before new analysis.",
-      "done_criteria": "Score updates within 3s of changes, delta shown",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-016",
-      "category": "ui",
-      "title": "Add extension popup",
-      "description": "Popup shows: score with delta, status, issue summary by severity, Open Panel button, GitHub link",
-      "done_criteria": "Popup displays score, delta, and issue counts",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-017",
-      "category": "ui",
-      "title": "Add badge icon state",
-      "description": "Badge shows score number, color matches score, gray when inactive",
-      "done_criteria": "Badge updates via chrome.action API",
-      "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": true
-    },
-    {
-      "id": "US-018",
-      "category": "release",
-      "title": "Final build and README",
-      "description": "All quality gates pass. README documents 7 checks, highlighting, score tracking, and installation.",
-      "done_criteria": "pnpm run build produces .zip, extension loads clean",
-      "validation_steps": ["pnpm run lint", "pnpm run type-check", "pnpm run build"],
-      "passes": true
+      "id": "RF-010",
+      "category": "quality",
+      "title": "Add integration test for full analysis flow",
+      "description": "Test that runs full analysis on mock Bubble page HTML, verifies score calculation and issue generation.",
+      "done_criteria": "Integration test validates end-to-end analysis",
+      "validation_steps": ["pnpm run test", "pnpm run build"],
+      "passes": false
     }
   ]
 }

@@ -1,10 +1,10 @@
-import { useEffect, useRef, useCallback } from "react"
-import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
-import { useStore } from "~lib/store"
-import { ScoreBadge } from "~components/ScoreBadge"
+import { useCallback, useEffect, useRef } from "react"
 import { IssuePanel } from "~components/IssuePanel"
+import { ScoreBadge } from "~components/ScoreBadge"
 import { runAnalysisWithHistory } from "~lib/scoring"
+import { useStore } from "~lib/store"
 import cssText from "data-text:~style.css"
+import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
 
 const DEBOUNCE_MS = 2000
 

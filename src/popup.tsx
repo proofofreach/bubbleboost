@@ -1,6 +1,6 @@
+import logoUrl from "data-base64:../assets/logo.png"
 import { useEffect, useState } from "react"
 import "./style.css"
-import logoUrl from "data-base64:../assets/logo.png"
 
 interface Issue {
   id: string
