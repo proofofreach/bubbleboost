@@ -55,7 +55,7 @@
       "description": "Detect nested repeating groups via DOM traversal. Warn >1 level, critical >2. Store refs to nested RG elements for highlighting.",
       "done_criteria": "Returns status, max depth, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-007",
