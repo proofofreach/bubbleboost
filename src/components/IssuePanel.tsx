@@ -78,7 +78,7 @@ function getBenchmarkMultiplier(checkNumber: number, count: number): string | nu
   }
 
   const threshold = thresholds[checkNumber]
-  if (threshold === 0) return null // Can't calculate multiplier for zero threshold
+  if (threshold === undefined || threshold === 0) return null // Can't calculate multiplier for zero or unknown threshold
 
   const multiplier = count / threshold
   if (multiplier >= 2) {

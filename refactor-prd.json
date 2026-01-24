@@ -1,0 +1,97 @@
+{
+  "project": "BubbleBoost Refactor",
+  "branchName": "ralph/refactor",
+  "description": "Code quality, architecture, and performance refactor for BubbleBoost Chrome extension",
+  "userStories": [
+    {
+      "id": "RF-001",
+      "category": "quality",
+      "title": "Add strict TypeScript config",
+      "description": "Enable strict mode, noUncheckedIndexedAccess, exactOptionalPropertyTypes. Fix all resulting type errors.",
+      "done_criteria": "tsconfig.json has strict settings, pnpm run type-check passes",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": true
+    },
+    {
+      "id": "RF-002",
+      "category": "quality",
+      "title": "Add ESLint with strict rules",
+      "description": "Add ESLint with @typescript-eslint, react-hooks, import-order rules. Fix all lint errors.",
+      "done_criteria": "pnpm run lint passes with zero warnings",
+      "validation_steps": ["pnpm run lint", "pnpm run type-check"],
+      "passes": false
+    },
+    {
+      "id": "RF-003",
+      "category": "architecture",
+      "title": "Extract check registry pattern",
+      "description": "Create CheckRegistry class that auto-discovers checks. Each check exports metadata (id, name, highlightable, benchmark). Remove manual wiring.",
+      "done_criteria": "Adding a new check requires only creating the file, no index.ts changes",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "RF-004",
+      "category": "architecture",
+      "title": "Create typed event system",
+      "description": "Replace direct store mutations with typed events: AnalysisStarted, AnalysisComplete, IssueHighlighted, etc. Add event logging for debugging.",
+      "done_criteria": "All state changes go through event dispatch, events are typed",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "RF-005",
+      "category": "architecture",
+      "title": "Separate DOM queries from scoring logic",
+      "description": "Checks should return raw data (counts, elements). Separate module handles severity thresholds and scoring. Makes thresholds configurable.",
+      "done_criteria": "Checks return CheckResult, separate scorer applies thresholds",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "RF-006",
+      "category": "performance",
+      "title": "Add check result caching with invalidation",
+      "description": "Cache check results by DOM hash. Only re-run checks when relevant DOM subtree changes. Track cache hit rate.",
+      "done_criteria": "Repeated analysis on unchanged DOM uses cache, logs hit rate",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "RF-007",
+      "category": "performance",
+      "title": "Batch DOM reads with requestIdleCallback",
+      "description": "Collect all DOM queries, batch execute during idle time. Avoid layout thrashing. Add performance marks.",
+      "done_criteria": "Analysis doesn't block main thread, uses requestIdleCallback",
+      "validation_steps": ["pnpm run type-check", "pnpm run build"],
+      "passes": false
+    },
+    {
+      "id": "RF-008",
+      "category": "performance",
+      "title": "Tree-shake unused code and lazy load panel",
+      "description": "Analyze bundle, remove dead code. Lazy load IssuePanel only when opened. Target <50KB content script.",
+      "done_criteria": "Content script bundle <50KB, panel loads on demand",
+      "validation_steps": ["pnpm run build", "check bundle size"],
+      "passes": false
+    },
+    {
+      "id": "RF-009",
+      "category": "quality",
+      "title": "Add unit tests for checks",
+      "description": "Add vitest. Write unit tests for each check with mock DOM. Target 80% coverage on src/lib/checks.",
+      "done_criteria": "pnpm run test passes, coverage >80% on checks",
+      "validation_steps": ["pnpm run test", "pnpm run type-check"],
+      "passes": false
+    },
+    {
+      "id": "RF-010",
+      "category": "quality",
+      "title": "Add integration test for full analysis flow",
+      "description": "Test that runs full analysis on mock Bubble page HTML, verifies score calculation and issue generation.",
+      "done_criteria": "Integration test validates end-to-end analysis",
+      "validation_steps": ["pnpm run test", "pnpm run build"],
+      "passes": false
+    }
+  ]
+}
