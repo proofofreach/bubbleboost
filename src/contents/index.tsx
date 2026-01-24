@@ -1,10 +1,12 @@
-import { useCallback, useEffect, useRef } from "react"
-import { IssuePanel } from "~components/IssuePanel"
+import { lazy, Suspense, useCallback, useEffect, useRef } from "react"
 import { ScoreBadge } from "~components/ScoreBadge"
 import { runAnalysisWithHistory } from "~lib/scoring"
 import { useStore } from "~lib/store"
 import cssText from "data-text:~style.css"
 import type { PlasmoCSConfig, PlasmoGetStyle } from "plasmo"
+
+// Lazy load IssuePanel - only loaded when panel is opened
+const IssuePanel = lazy(() => import("~components/IssuePanel").then(m => ({ default: m.IssuePanel })))
 
 const DEBOUNCE_MS = 2000
 
@@ -212,10 +214,16 @@ function ContentScript() {
     }
   }, [setIsActive, runImmediateAnalysis, runDebouncedAnalysis])
 
+  const panelOpen = useStore((state) => state.panelOpen)
+
   return (
     <>
       <ScoreBadge />
-      <IssuePanel />
+      {panelOpen && (
+        <Suspense fallback={null}>
+          <IssuePanel />
+        </Suspense>
+      )}
     </>
   )
 }
