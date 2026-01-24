@@ -73,7 +73,7 @@
       "description": "Count elements with display:none that have data-source attributes. Warn >20. Store refs for highlighting.",
       "done_criteria": "Returns status, count, elements array for highlighting",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "US-009",
