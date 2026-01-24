@@ -6,6 +6,7 @@ import {
   checkImagesWithoutDimensions,
   checkRgCellElementCount,
   checkGroupNestingDepth,
+  registry,
 } from "./checks"
 import { eventBus } from "./eventBus"
 import { createEvent } from "./events"
@@ -103,6 +104,72 @@ export function runAnalysisWithHistory(
 
     // Run the analysis
     const { issues, score } = runAnalysis()
+
+    // Update store with new results
+    setIssues(issues)
+    setScore(score)
+
+    // Dispatch analysis complete event
+    eventBus.dispatch(createEvent.analysisComplete(score, currentScore, issues))
+
+    return { issues, score }
+  } catch (error) {
+    // Dispatch analysis error event
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    eventBus.dispatch(createEvent.analysisError(errorMessage))
+    throw error
+  }
+}
+
+/**
+ * Run all checks asynchronously using idle-time batching.
+ * DOM reads are batched and executed during requestIdleCallback.
+ * This prevents blocking the main thread.
+ */
+export async function runAllChecksAsync(): Promise<Issue[]> {
+  return registry.runAllAsync()
+}
+
+/**
+ * Run a full analysis asynchronously with idle-time batching.
+ * Returns issues array and calculated score.
+ * Does not block the main thread.
+ */
+export async function runAnalysisAsync(): Promise<{ issues: Issue[]; score: number }> {
+  const issues = await runAllChecksAsync()
+  const score = calculateScoreFromIssues(issues)
+  return { issues, score }
+}
+
+/**
+ * Run analysis asynchronously with history tracking.
+ * Uses requestIdleCallback for non-blocking DOM reads.
+ *
+ * Dispatches AnalysisStarted and AnalysisComplete events.
+ *
+ * @param getState - Function to get current store state
+ * @param setScore - Function to update score in store
+ * @param setPreviousScore - Function to update previousScore in store
+ * @param setIssues - Function to update issues in store
+ */
+export async function runAnalysisWithHistoryAsync(
+  getState: () => { score: number },
+  setScore: (score: number) => void,
+  setPreviousScore: (score: number | null) => void,
+  setIssues: (issues: Issue[]) => void
+): Promise<{ issues: Issue[]; score: number }> {
+  // Dispatch analysis started event
+  eventBus.dispatch(createEvent.analysisStarted())
+
+  try {
+    // Get current score from store at execution time
+    const currentScore = getState().score
+
+    // Store current score as previous before running new analysis
+    setPreviousScore(currentScore)
+
+    // Run the analysis asynchronously (non-blocking)
+    const { issues, score } = await runAnalysisAsync()
 
     // Update store with new results
     setIssues(issues)

@@ -1,3 +1,9 @@
+import {
+  scheduleDomRead,
+  flushImmediately,
+  logBatchStats,
+  type ScheduleOptions,
+} from "~lib/domBatcher"
 import { scorer } from "./scorer"
 import type { Check, CheckMeta, CheckResult } from "./types"
 import type { Issue } from "~lib/store"
@@ -231,6 +237,117 @@ class CheckRegistry {
     this.checks.clear()
     this.cache.clear()
     this.resetCacheStats()
+  }
+
+  /**
+   * Run a single check asynchronously using idle-time batching.
+   * DOM reads are batched and executed during requestIdleCallback.
+   */
+  private async runCheckWithCacheAsync(
+    check: Check,
+    options?: ScheduleOptions
+  ): Promise<CheckResult | null> {
+    const checkId = check.meta.id
+
+    // Schedule DOM hash computation during idle time
+    const currentHash = await scheduleDomRead(
+      () => computeDomHash(checkId),
+      options
+    )
+    const cached = this.cache.get(checkId)
+
+    if (cached !== undefined && cached.domHash === currentHash) {
+      this.cacheHits++
+      return cached.result
+    }
+
+    this.cacheMisses++
+
+    // Schedule check execution during idle time
+    const result = await scheduleDomRead(() => check.run(), options)
+
+    if (result !== null) {
+      this.cache.set(checkId, { result, domHash: currentHash })
+    } else {
+      this.cache.delete(checkId)
+    }
+
+    return result
+  }
+
+  /**
+   * Run all checks asynchronously with idle-time batching.
+   * DOM reads don't block the main thread.
+   * Uses requestIdleCallback for non-blocking execution.
+   */
+  async runAllAsync(options?: ScheduleOptions): Promise<Issue[]> {
+    performance.mark("bubbleboost-analysis-start")
+
+    const checks = this.getAll()
+    const issues: Issue[] = []
+
+    // Run all checks in sequence but with batched DOM reads
+    for (const check of checks) {
+      const result = await this.runCheckWithCacheAsync(check, options)
+      if (result !== null) {
+        const issue = scorer.resultToIssue(check.meta, result)
+        if (issue !== null) {
+          issues.push(issue)
+        }
+      }
+    }
+
+    performance.mark("bubbleboost-analysis-end")
+    performance.measure(
+      "bubbleboost-analysis",
+      "bubbleboost-analysis-start",
+      "bubbleboost-analysis-end"
+    )
+
+    this.logCacheStats()
+    logBatchStats()
+
+    return issues
+  }
+
+  /**
+   * Run all checks asynchronously and return raw results.
+   * Uses idle-time batching for non-blocking DOM reads.
+   */
+  async runAllRawAsync(
+    options?: ScheduleOptions
+  ): Promise<Array<{ meta: CheckMeta; result: CheckResult }>> {
+    performance.mark("bubbleboost-analysis-raw-start")
+
+    const checks = this.getAll()
+    const results: Array<{ meta: CheckMeta; result: CheckResult }> = []
+
+    for (const check of checks) {
+      const result = await this.runCheckWithCacheAsync(check, options)
+      if (result !== null) {
+        results.push({ meta: check.meta, result })
+      }
+    }
+
+    performance.mark("bubbleboost-analysis-raw-end")
+    performance.measure(
+      "bubbleboost-analysis-raw",
+      "bubbleboost-analysis-raw-start",
+      "bubbleboost-analysis-raw-end"
+    )
+
+    this.logCacheStats()
+    logBatchStats()
+
+    return results
+  }
+
+  /**
+   * Force immediate execution of any pending batched operations.
+   * Use when results are needed immediately.
+   */
+  flushPendingOperations(): void {
+    flushImmediately()
   }
 }
 

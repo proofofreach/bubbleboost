@@ -64,7 +64,7 @@
       "description": "Collect all DOM queries, batch execute during idle time. Avoid layout thrashing. Add performance marks.",
       "done_criteria": "Analysis doesn't block main thread, uses requestIdleCallback",
       "validation_steps": ["pnpm run type-check", "pnpm run build"],
-      "passes": false
+      "passes": true
     },
     {
       "id": "RF-008",
