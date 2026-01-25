@@ -93,7 +93,8 @@
       "description": "Test that runs full analysis on mock Bubble page HTML, verifies score calculation and issue generation.",
       "done_criteria": "Integration test validates end-to-end analysis",
       "validation_steps": ["pnpm run test", "pnpm run build"],
-      "passes": false
+      "passes": true,
+      "notes": "22 integration tests in scoring.integration.test.ts covering: perfect score on optimal page, all 7 check detections (element count, RG nesting, visible-on-load, hidden-loaded, images, RG cell count, group nesting), score calculation with multiple issues, issue structure validation."
     }
   ]
 }
